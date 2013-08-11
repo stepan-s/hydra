@@ -319,12 +319,15 @@ void Hydra::loop() {
 	for(i = 0; i < this->components->totalCount; ++i) {
 		HydraComponent* item = this->components->list[i].service.component;
 		if (item->isPacketAvailable()) {
+			memset(& packet, 0, HYDRA_PACKET_SIZE);
 			if (item->readPacket(& packet)) {
 				HydraAddress received_via;
 				if (i < this->components->netifCount) {
 					received_via.raw = ((HydraNetComponent*) item)->getAddress().raw;
 				} else {
 					received_via.raw = HYDRA_ADDR_LOCAL;
+					packet.part.from_service = this->components->list[i].id;
+					packet.part.timestamp = this->getTime();
 				}
 				this->route(& packet, received_via);
 			}
@@ -383,16 +386,13 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
 		bool landed = false;
 		for(i = 0; i < this->components->netifCount; ++i) {
 			HydraNetComponent* item = this->components->list[i].netif.component;
-			HydraAddress gateway = item->getGateway(packet->part.to_addr);
-			if (gateway.raw != HYDRA_ADDR_NULL) {
-				if (received_via.raw != item->getAddress().raw) {
-					item->sendPacket(destionation, packet, hydra_is_addr_local(received_via));
-				}
-				if (!landed && (destionation.part.device == item->getAddress().part.device)) {
-					//and me
-					landed = true;
-					this->landing(packet, received_via);
-				}
+			if (received_via.raw != item->getAddress().raw) {
+				item->sendPacket(destionation, packet, hydra_is_addr_local(received_via));
+			}
+			if (!landed && (destionation.part.device == item->getAddress().part.device)) {
+				//and me
+				landed = true;
+				this->landing(packet, received_via);
 			}
 		}
 

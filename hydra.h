@@ -5,6 +5,7 @@
 #include <WString.h>
 
 #define HYDRA_PACKET_SIZE 32
+#define HYDRA_PACKET_PAYLOAD_DATA_SIZE 20
 
 #define HYDRA_ADDR_BROADCAST_ALL 0xFFFF
 #define HYDRA_ADDR_BROADCAST_NET 0x00FF
@@ -58,10 +59,10 @@ struct HydraPacket {
 			uint8_t			to_service;
 			uint32_t		timestamp;
 			union {
-				uint8_t		payload_raw[22];
+				uint8_t		payload_raw[HYDRA_PACKET_PAYLOAD_DATA_SIZE + 2];
 				struct {
 					uint16_t	type;
-					uint8_t		data[20];
+					uint8_t		data[HYDRA_PACKET_PAYLOAD_DATA_SIZE];
 				} payload;
 			};
 		} part;
