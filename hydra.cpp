@@ -446,6 +446,10 @@ uint32_t Hydra::getTime() {
 	return this->timestamp;
 }
 
+void Hydra::setTime(uint32_t timestamp) {
+	this->timestamp = timestamp;
+}
+
 HydraAddress Hydra::getDefaultGateway() {
 	return this->default_gateway;
 }

@@ -20,8 +20,6 @@
 #define HYDRA_DEVICE_NULL 0x00
 
 #define HYDRA_SERVICE_NET 0
-#define HYDRA_SERVICE_CORE 1
-#define HYDRA_SERVICE_TIME 2
 
 #define hydra_is_addr_to_all(addr) ((addr.raw & HYDRA_ADDR_BROADCAST_ALL) == HYDRA_ADDR_BROADCAST_ALL)
 #define hydra_is_addr_to_net(addr) ((addr.raw & HYDRA_ADDR_BROADCAST_NET) == HYDRA_ADDR_BROADCAST_NET)
@@ -154,6 +152,7 @@ public:
 	void route(const HydraPacket* packet, const HydraAddress received_via);
 	void landing(const HydraPacket* packet, const HydraAddress received_via);
 	uint32_t getTime();
+	void setTime(uint32_t timestamp);
 	HydraAddress getDefaultGateway();
 };
 
