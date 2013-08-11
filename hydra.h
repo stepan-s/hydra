@@ -144,6 +144,7 @@ class Hydra {
 	bool consoleParseHex(String hex, uint8_t* buffer, uint8_t length);
 	void loadConfig();
 	void saveConfig();
+	void updateTimer();
 
 public:
 	Hydra(HydraComponentDescriptionList* components);

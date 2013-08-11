@@ -65,7 +65,7 @@ HydraAddress HydraNetComponent::getAddress() {
 
 Hydra::Hydra(HydraComponentDescriptionList* components) {
 	this->components = components;
-	this->ms = 0;
+	this->ms = millis();
 	this->timestamp = 0;
 	this->default_gateway.raw = HYDRA_ADDR_NULL;
 }
@@ -310,6 +310,13 @@ void Hydra::init() {
 	hydra_debug("Hydra::init end");
 }
 
+void Hydra::updateTimer() {
+	uint32_t ms = millis();
+	uint32_t delta_ms = ms - this->ms;
+	this->timestamp += delta_ms / 1000;
+	this->ms = ms - delta_ms % 1000;
+}
+
 void Hydra::loop() {
 	//hydra_debug("Hydra::loop begin");
 	int i;
@@ -317,6 +324,8 @@ void Hydra::loop() {
 
 	// enumerate services
 	for(i = 0; i < this->components->totalCount; ++i) {
+		this->updateTimer();
+
 		HydraComponent* item = this->components->list[i].service.component;
 		if (item->isPacketAvailable()) {
 			memset(& packet, 0, HYDRA_PACKET_SIZE);
@@ -433,6 +442,7 @@ void Hydra::landing(const HydraPacket* packet, const HydraAddress received_via) 
 }
 
 uint32_t Hydra::getTime() {
+	this->updateTimer();
 	return this->timestamp;
 }
 
