@@ -28,17 +28,10 @@ void HydraEcho::init(Hydra* hydra) {
 bool HydraEcho::writePacket(const HydraPacket* packet) {
 	hydra_debug("HydraEcho::writePacket");
 	if (packet->part.payload.type == HYDRA_PAYLOAD_ECHO_TYPE_REQUEST) {
-		memcpy(& this->reply, packet, HYDRA_PACKET_SIZE);
-		//swap to and from
-		HydraAddress tmp_addr = this->reply.part.from_addr;
-		this->reply.part.from_addr = this->reply.part.to_addr;
-		this->reply.part.to_addr = tmp_addr;
+		memcpy(& this->reply_payload, packet->part.payload.data, HYDRA_PACKET_PAYLOAD_DATA_SIZE);
+		this->reply_to_address = packet->part.from_addr;
+		this->reply_to_service = packet->part.from_service;
 		this->reply_ready = true;
-		uint16_t tmp_service = this->reply.part.from_service;
-		this->reply.part.from_service = this->reply.part.to_service;
-		this->reply.part.to_service = tmp_service;
-		//reply
-		this->reply.part.payload.type = HYDRA_PAYLOAD_ECHO_TYPE_REPLY;
 	}
 	return true;
 }
@@ -48,7 +41,14 @@ bool HydraEcho::isPacketAvailable() {
 }
 
 bool HydraEcho::readPacket(HydraPacket* packet) {
-	memcpy(packet, & this->reply, HYDRA_PACKET_SIZE);
-	this->reply_ready = false;
-	return true;
+	if (this->reply_ready) {
+		memcpy(packet->part.payload.data, & this->reply_payload, HYDRA_PACKET_PAYLOAD_DATA_SIZE);
+		packet->part.to_addr = this->reply_to_address;
+		packet->part.to_service = this->reply_to_service;
+		packet->part.payload.type = HYDRA_PAYLOAD_ECHO_TYPE_REPLY;
+		this->reply_ready = false;
+		return true;
+	} else {
+		return false;
+	}
 }
