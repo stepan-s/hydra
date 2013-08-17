@@ -20,6 +20,7 @@ uint8_t* HydraEcho::getConfig() {
 }
 
 void HydraEcho::init(Hydra* hydra) {
+	this->reply_ready = false;
 	hydra_debug("HydraEcho::init begin");
 	HydraComponent::init(hydra);
 	hydra_debug("HydraEcho::init end");

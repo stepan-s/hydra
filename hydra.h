@@ -31,6 +31,8 @@
 	#define HYDRA_BOOT_CONSOLE_WAIT_TIME 3
 #endif
 
+#define hydra_debug_(msg)					Serial.println(msg)
+#define hydra_debug_param_(msg, param)		Serial.print(msg); Serial.println(param)
 #ifdef HYDRA_DEBUG
 	#define hydra_debug(msg)					Serial.println(msg)
 	#define hydra_debug_param(msg, param)		/*Serial.print(msg);*/ Serial.println(param)
@@ -104,20 +106,18 @@ public:
 	virtual HydraAddress getAddress();
 };
 
-struct HydraComponentDescription {
-	union {
-		struct {
-			HydraComponent* component;
-			uint8_t id;
-		};
-		struct {
-			HydraNetComponent* component;
-		} netif;
-		struct {
-			HydraComponent* component;
-			uint8_t id;
-		} service;
+union HydraComponentDescription {
+	struct {
+		HydraComponent* component;
+		uint8_t id;
 	};
+	struct {
+		HydraNetComponent* component;
+	} netif;
+	struct {
+		HydraComponent* component;
+		uint8_t id;
+	} service;
 };
 
 struct HydraComponentDescriptionList {

@@ -1,6 +1,8 @@
 #include "hydra_nrf.h"
 #include <AESLib.h>
 
+static const uint8_t enc_iv[16] = {'H', 'Y', 'D', 'R', 'A', ' ', 'N', 'F', 'R', ' ', 'A', 'E', 'S', ' ', 'I', 'V'};
+
 const char* HydraNrf::name = "NRF24";
 
 const HydraConfigValueDescriptionList HydraNrf::config_value_description_list = {
@@ -14,6 +16,7 @@ const HydraConfigValueDescriptionList HydraNrf::config_value_description_list = 
 
 HydraNrf::HydraNrf(uint8_t cePin, uint8_t csPin) {
 	this->radio = new RF24(cePin, csPin);
+	memcpy(this->enc_iv, enc_iv, 16);
 }
 
 const char* HydraNrf::getName() {

@@ -4,6 +4,12 @@
 // HydraComponent
 /////////////////
 
+const char* HydraComponent::name = "Nil";
+
+const HydraConfigValueDescriptionList HydraComponent::config_value_description_list = {
+	0, 0, 0
+};
+
 const char* HydraComponent::getName() {
 	return HydraComponent::name;
 }

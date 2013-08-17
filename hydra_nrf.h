@@ -25,7 +25,7 @@ class HydraNrf: public HydraNetComponent {
 	static const HydraConfigValueDescriptionList config_value_description_list;
 	HydraNrfConfig config;
 	RF24* radio;
-	uint8_t enc_iv[16] = {'H', 'Y', 'D', 'R', 'A', ' ', 'N', 'F', 'R', ' ', 'A', 'E', 'S', ' ', 'I', 'V'};
+	uint8_t enc_iv[16];
 
 public:
 	HydraNrf(uint8_t cePin, uint8_t csPin);
