@@ -4,7 +4,9 @@
 const char* HydraEcho::name = "Echo";
 
 const HydraConfigValueDescriptionList HydraEcho::config_value_description_list = {
-	0, 0, 0
+	1, 2, (HydraConfigValueDescription[]) {
+		{2, "Ping ADDR"},
+	}
 };
 
 const char* HydraEcho::getName() {
@@ -16,13 +18,14 @@ const HydraConfigValueDescriptionList* HydraEcho::getConfigDescription() {
 }
 
 uint8_t* HydraEcho::getConfig() {
-	return 0;
+	return this->config.raw;
 }
 
 void HydraEcho::init(Hydra* hydra) {
-	this->reply_ready = false;
 	hydra_debug("HydraEcho::init begin");
 	HydraComponent::init(hydra);
+	this->reply_ready = false;
+	this->timestamp = hydra->getTime();
 	hydra_debug("HydraEcho::init end");
 }
 
@@ -38,7 +41,7 @@ bool HydraEcho::writePacket(const HydraPacket* packet) {
 }
 
 bool HydraEcho::isPacketAvailable() {
-	return this->reply_ready;
+	return this->reply_ready || ((this->config.parts.addr.raw != HYDRA_ADDR_NULL) && (this->timestamp < this->hydra->getTime()));
 }
 
 bool HydraEcho::readPacket(HydraPacket* packet) {
@@ -48,6 +51,12 @@ bool HydraEcho::readPacket(HydraPacket* packet) {
 		packet->part.to_service = this->reply_to_service;
 		packet->part.payload.type = HYDRA_PAYLOAD_ECHO_TYPE_REPLY;
 		this->reply_ready = false;
+		return true;
+	} else if ((this->config.parts.addr.raw != HYDRA_ADDR_NULL) && (this->timestamp < this->hydra->getTime())) {
+		packet->part.to_addr = this->config.parts.addr;
+		packet->part.to_service = HYDRA_SERVICE_ECHO;
+		packet->part.payload.type = HYDRA_PAYLOAD_ECHO_TYPE_REQUEST;
+		this->timestamp = hydra->getTime();
 		return true;
 	} else {
 		return false;

@@ -7,7 +7,14 @@
 
 #include "hydra.h"
 
-struct HydraEchoConfig {};
+struct HydraEchoConfig {
+	union {
+		uint8_t raw[2];
+		struct {
+			HydraAddress addr;
+		} parts;
+	};
+};
 
 class HydraEcho: public HydraComponent {
 	static const char* name;
@@ -17,6 +24,7 @@ class HydraEcho: public HydraComponent {
 	HydraAddress reply_to_address;
 	uint16_t reply_to_service;
 	uint8_t reply_payload[HYDRA_PACKET_PAYLOAD_DATA_SIZE];
+	uint32_t timestamp;
 
 public:
 	virtual const char* getName();
