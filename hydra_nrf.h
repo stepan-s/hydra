@@ -7,15 +7,17 @@
 #include "RF24.h"
 
 #define HYDRA_NRF_BC 0xFF
+#define HYDRA_NRF_ROUTE_COUNT 4
 
 struct HydraNrfConfig {
 	union {
-		uint8_t raw[22];
+		uint8_t raw[22 + HYDRA_NRF_ROUTE_COUNT];
 		struct {
 			HydraAddress addr;
 			uint8_t net[3];
 			uint8_t channel;
 			uint8_t enc_key[16];
+			uint8_t net_routes[HYDRA_NRF_ROUTE_COUNT];
 		} parts;
 	};
 };
