@@ -17,7 +17,7 @@ const HydraConfigValueDescriptionList HydraNrf::config_value_description_list = 
 		{3, "NET"},
 		{1, "Channel"},
 		{16, "EncryptKey"},
-		{HYDRA_NRF_ROUTE_COUNT, "Route to NETS"},
+		{HYDRA_NRF_ROUTE_COUNT, "RouteToNETS"},
 	}
 };
 

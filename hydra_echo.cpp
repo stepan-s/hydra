@@ -5,7 +5,7 @@ const char* HydraEcho::name = "Echo";
 
 const HydraConfigValueDescriptionList HydraEcho::config_value_description_list = {
 	1, 2, (HydraConfigValueDescription[]) {
-		{2, "Ping ADDR"},
+		{2, "PingADDR"},
 	}
 };
 
