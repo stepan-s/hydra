@@ -60,15 +60,16 @@ bool HydraLan::readPacket(HydraPacket* packet) {
 	return false;
 }
 
-HydraAddress HydraLan::getGateway(HydraAddress destionation) {
+HydraAddress HydraLan::getGateway(const HydraAddress destionation) {
+	HydraAddress gateway = destionation;
 	if (this->config.parts.addr.part.net == destionation.part.net) {
 		if (this->config.parts.addr.part.device == destionation.part.device) {
-			destionation.raw = HYDRA_ADDR_LOCAL;
+			gateway.raw = HYDRA_ADDR_LOCAL;
 		}
 	} else {
-		destionation.raw = HYDRA_ADDR_NULL;
+		gateway.raw = HYDRA_ADDR_NULL;
 	}
-	return destionation;
+	return gateway;
 }
 
 bool HydraLan::sendPacket(const HydraAddress to, const HydraPacket* packet, const bool set_from_addr) {

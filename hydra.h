@@ -101,7 +101,7 @@ public:
 class HydraNetComponent: public HydraComponent {
 public:
 	virtual bool writePacket(const HydraPacket* packet);
-	virtual HydraAddress getGateway(HydraAddress destionation);
+	virtual HydraAddress getGateway(const HydraAddress destionation);
 	virtual bool sendPacket(const HydraAddress to, const HydraPacket* packet, const bool set_from_addr);
 	virtual HydraAddress getAddress();
 };
@@ -150,7 +150,7 @@ public:
 	void init();
 	void loop();
 	void route(const HydraPacket* packet, const HydraAddress received_via);
-	void landing(const HydraPacket* packet, const HydraAddress received_via);
+	void landing(const HydraPacket* packet, const HydraAddress received_via, const HydraAddress landing_via);
 	uint32_t getTime();
 	void setTime(uint32_t timestamp);
 	HydraAddress getDefaultGateway();

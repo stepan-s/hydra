@@ -34,7 +34,7 @@ public:
 	virtual void init(Hydra* hydra);
 	virtual bool isPacketAvailable();
 	virtual bool readPacket(HydraPacket* packet);
-	virtual HydraAddress getGateway(HydraAddress destionation);
+	virtual HydraAddress getGateway(const HydraAddress destionation);
 	virtual bool sendPacket(const HydraAddress to, const HydraPacket* packet, const bool set_from_addr);
 	virtual HydraAddress getAddress();
 };

@@ -90,10 +90,11 @@ bool HydraNrf::readPacket(HydraPacket* packet) {
 	//return false;
 }
 
-HydraAddress HydraNrf::getGateway(HydraAddress destionation) {
+HydraAddress HydraNrf::getGateway(const HydraAddress destionation) {
+	HydraAddress gateway = destionation;
 	if (this->config.parts.addr.part.net == destionation.part.net) {
 		if (this->config.parts.addr.part.device == destionation.part.device) {
-			destionation.raw = HYDRA_ADDR_LOCAL;
+			gateway.raw = HYDRA_ADDR_LOCAL;
 		}
 	} else {
 		int i;
@@ -102,9 +103,9 @@ HydraAddress HydraNrf::getGateway(HydraAddress destionation) {
 				return destionation;
 			}
 		}
-		destionation.raw = HYDRA_ADDR_NULL;
+		gateway.raw = HYDRA_ADDR_NULL;
 	}
-	return destionation;
+	return gateway;
 }
 
 bool HydraNrf::sendPacket(const HydraAddress to, const HydraPacket* packet, const bool set_from_addr) {

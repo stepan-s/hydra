@@ -21,6 +21,7 @@ class HydraEcho: public HydraComponent {
 	static const HydraConfigValueDescriptionList config_value_description_list;
 	HydraEchoConfig config;
 	bool reply_ready;
+	HydraAddress reply_from_address;
 	HydraAddress reply_to_address;
 	uint16_t reply_to_service;
 	uint8_t reply_payload[HYDRA_PACKET_PAYLOAD_DATA_SIZE];
