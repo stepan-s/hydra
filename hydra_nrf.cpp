@@ -112,7 +112,6 @@ HydraAddress HydraNrf::getGateway(const HydraAddress destionation) {
 bool HydraNrf::sendPacket(const HydraAddress to, const HydraPacket* packet, const bool set_from_addr) {
 	hydra_debug_param("HydraNrf::sendPacket to ", to.raw);
 	hydra_debug_param("HydraNrf::sendPacket packet to ", packet->part.to_addr.raw);
-	this->radio->stopListening();
 
 	HydraPacket p;
 	memcpy(& p, packet, HYDRA_PACKET_SIZE);
@@ -126,10 +125,13 @@ bool HydraNrf::sendPacket(const HydraAddress to, const HydraPacket* packet, cons
 	hydra_debug_param("HydraNrf::sendPacket lo ", addr.a32[0]);
 	hydra_debug_param("HydraNrf::sendPacket hi ", addr.a32[1]);
 
-	this->radio->openWritingPipe(addr.a64);
 	aes128_cbc_enc(this->config.parts.enc_key, this->enc_iv, p.data, HYDRA_PACKET_SIZE);
+
+	this->radio->stopListening();
+	this->radio->openWritingPipe(addr.a64);
 	bool result = this->radio->write(p.data, HYDRA_PACKET_SIZE);
 	this->radio->startListening();
+
 	hydra_debug_param("HydraNrf::sendPacket result ", result);
 	return result;
 }
