@@ -1,5 +1,6 @@
 #include "hydra_nrf.h"
 #include <AESLib.h>
+#include "hydra_core.h"
 
 static const uint8_t enc_iv[16] = {'H', 'Y', 'D', 'R', 'A', ' ', 'N', 'F', 'R', ' ', 'A', 'E', 'S', ' ', 'I', 'V'};
 
@@ -81,7 +82,7 @@ bool HydraNrf::readPacket(HydraPacket* packet) {
 		hydra_debug_param("HydraNrf::readPacket received from_addr ", packet->part.from_addr.raw);
 		hydra_debug_param("HydraNrf::readPacket received to_addr ", packet->part.to_addr.raw);
 		uint32_t now = this->hydra->getTime();
-		if ((now > 1000000) && (abs(now - packet->part.timestamp) > 5)) {
+		if ((abs(now - packet->part.timestamp) > 2) and !((packet->part.to_service == HYDRA_SERVICE_CORE) and (packet->part.payload.type == HYDRA_PAYLOAD_CORE_TYPE_SET_TIME))) {
 			hydra_debug_param("HydraNrf::readPacket packet expired ", abs(now - packet->part.timestamp));
 			return false;
 		}
