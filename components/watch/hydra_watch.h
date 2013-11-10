@@ -2,14 +2,8 @@
 #define _HYDRA_WATCH_ true
 
 #define HYDRA_SERVICE_WATCH 4
-//out
-#define HYDRA_PAYLOAD_WATCH_TYPE_BUTTON_PRESS 0
-#define HYDRA_PAYLOAD_WATCH_TYPE_TIMEZONE_REQUEST 1
-//in
-#define HYDRA_PAYLOAD_WATCH_TYPE_TIMEZONE_RESPONSE 2
 #define HYDRA_PAYLOAD_WATCH_TYPE_BRIGHT 3
 #define HYDRA_PAYLOAD_WATCH_TYPE_DISPLAY 4
-#define HYDRA_PAYLOAD_WATCH_TYPE_ALERT 5
 
 #include "hydra.h"
 
@@ -27,7 +21,6 @@ class HydraWatch: public HydraComponent {
 	static const char* name;
 	static const HydraConfigValueDescriptionList config_value_description_list;
 	HydraWatchConfig config;
-	int32_t timezone_offset;
 	uint32_t timestamp;
 
 public:

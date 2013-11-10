@@ -453,8 +453,16 @@ uint32_t Hydra::getTime() {
 	return this->timestamp;
 }
 
-void Hydra::setTime(uint32_t timestamp) {
+int32_t Hydra::getTimeZoneOffset() {
+	return this->timezone_offset_seconds;
+}
+
+void Hydra::setTime(uint32_t timestamp, int16_t timezone_offset_minutes) {
 	this->timestamp = timestamp;
+	if ((timezone_offset_minutes <= 720) || (timezone_offset_minutes >= -720)) {
+		this->timezone_offset_seconds = timezone_offset_minutes;
+		this->timezone_offset_seconds *= 60;
+	}
 }
 
 HydraAddress Hydra::getDefaultGateway() {

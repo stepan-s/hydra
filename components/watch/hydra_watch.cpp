@@ -34,11 +34,6 @@ void HydraWatch::init(Hydra* hydra) {
 bool HydraWatch::writePacket(const HydraPacket* packet) {
 	hydra_debug("HydraWatch::writePacket");
 	switch (packet->part.payload.type) {
-	case HYDRA_PAYLOAD_WATCH_TYPE_TIMEZONE_RESPONSE:
-		this->timezone_offset = ((int32_t*)packet->part.payload.data)[0];
-		break;
-	case HYDRA_PAYLOAD_WATCH_TYPE_ALERT:
-		break;
 	case HYDRA_PAYLOAD_WATCH_TYPE_DISPLAY:
 		break;
 	case HYDRA_PAYLOAD_WATCH_TYPE_BRIGHT:
@@ -50,7 +45,7 @@ bool HydraWatch::writePacket(const HydraPacket* packet) {
 bool HydraWatch::isPacketAvailable() {
 	uint32_t timestamp = hydra->getTime();
 	if (timestamp != this->timestamp) {
-		uint32_t localtime = (timestamp + this->timezone_offset) % 86400;
+		uint32_t localtime = (timestamp + this->hydra->getTimeZoneOffset()) % 86400;
 		uint8_t hour = localtime / 3600;
 		uint8_t minute = (localtime % 3600) / 60;
 	    lcd_render_symbol(0, hour / 10);
