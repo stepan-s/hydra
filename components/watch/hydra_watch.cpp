@@ -52,8 +52,8 @@ bool HydraWatch::isPacketAvailable() {
 	    lcd_render_symbol(1, hour % 10);
 	    lcd_render_symbol(2, minute / 10);
 	    lcd_render_symbol(3, minute % 10);
-	    lcd_render_pixel(LCD_PIXEL_WATCH_DOT_HI, timestamp & 1);
-	    lcd_render_pixel(LCD_PIXEL_WATCH_DOT_LO, timestamp & 1);
+		lcd_render_pixel(LCD_PIXEL_WATCH_DOT_HI, this->hydra->isTimeSynced() ? timestamp & 1 : 0);
+		lcd_render_pixel(LCD_PIXEL_WATCH_DOT_LO, timestamp & 1);
 	}
 	this->timestamp = timestamp;
 

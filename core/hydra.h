@@ -131,6 +131,7 @@ class Hydra {
 	HydraComponentDescriptionList* components;
 	uint32_t ms;
 	uint32_t timestamp;
+	int32_t timestamp_last;
 	int32_t timezone_offset_seconds;
 	HydraAddress default_gateway;
 	void consoleRun();
@@ -153,6 +154,7 @@ public:
 	void route(const HydraPacket* packet, const HydraAddress received_via);
 	void landing(const HydraPacket* packet, const HydraAddress received_via, const HydraAddress landing_via);
 	uint32_t getTime();
+	bool isTimeSynced();
 	int32_t getTimeZoneOffset();
 	void setTime(uint32_t timestamp, int16_t timezone_offset_minutes = 32768);
 	HydraAddress getDefaultGateway();

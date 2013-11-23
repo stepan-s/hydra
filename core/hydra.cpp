@@ -73,6 +73,7 @@ Hydra::Hydra(HydraComponentDescriptionList* components) {
 	this->components = components;
 	this->ms = millis();
 	this->timestamp = 0;
+	this->timestamp_last = 0;
 	this->default_gateway.raw = HYDRA_ADDR_NULL;
 }
 
@@ -457,8 +458,13 @@ int32_t Hydra::getTimeZoneOffset() {
 	return this->timezone_offset_seconds;
 }
 
+bool Hydra::isTimeSynced() {
+	return this->timestamp_last ? abs(this->timestamp - this->timestamp_last) < 600 : false;
+}
+
 void Hydra::setTime(uint32_t timestamp, int16_t timezone_offset_minutes) {
 	this->timestamp = timestamp;
+	this->timestamp_last = timestamp;
 	if ((timezone_offset_minutes <= 720) || (timezone_offset_minutes >= -720)) {
 		this->timezone_offset_seconds = timezone_offset_minutes;
 		this->timezone_offset_seconds *= 60;
