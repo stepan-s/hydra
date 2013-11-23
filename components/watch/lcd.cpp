@@ -176,6 +176,7 @@ void lcd_render_pixel(int pixel, bool active) {
 }
 
 void lcd_rest() {
+#ifdef __AVR_ATmega2560__
 	PORTA = 0;
 	DDRA = 0xFF;
 	PORTC = 0;
@@ -184,9 +185,11 @@ void lcd_rest() {
 	DDRL = 0xFF;
 	PORTD = PORTD & 0x7F;
 	DDRD = DDRD | 0x80;
+#endif
 }
 
 void lcd_set() {
+#ifdef __AVR_ATmega2560__
 	//lcd phase has two half phases, get true phase
 	uint8_t phase = lcd_phase >> 1;
 	//get phase bitmap bank
@@ -245,9 +248,11 @@ void lcd_set() {
 	if (++lcd_phase > 7) {
 		lcd_phase = 0;
 	}
+#endif
 }
 
 uint8_t lcd_state = 0;
+#ifdef __AVR_ATmega2560__
 ISR(TIMER5_COMPA_vect) {
 	if (lcd_state == 0) {
 		lcd_rest();
@@ -260,12 +265,15 @@ ISR(TIMER5_COMPA_vect) {
 	}
 	TCNT5 = 0;
 }
+#endif
 
 void lcd_init() {
+#ifdef __AVR_ATmega2560__
 	cli();
 	TCCR5A = 0;
 	TCCR5B = 1 << CS10; // Set CS10 bit so timer runs at clock speed
 	TIMSK5 = 1 << OCIE1A; // compare enable
 	OCR5A = 3200; // compare value
 	sei();
+#endif
 }
