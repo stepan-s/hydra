@@ -474,3 +474,8 @@ void Hydra::setTime(uint32_t timestamp, int16_t timezone_offset_minutes) {
 HydraAddress Hydra::getDefaultGateway() {
 	return this->default_gateway;
 }
+
+bool Hydra::isMasterOnline() {
+	//FIXME:
+	return this->isTimeSynced();
+}
