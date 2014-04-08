@@ -1,5 +1,5 @@
 #include "hydra_switch.h"
-#include "hydra_relay.h"
+#include "../relay/hydra_relay.h"
 #include <Arduino.h>
 
 const char* HydraSwitch::name = "Switch";
@@ -56,7 +56,7 @@ bool HydraSwitch::writePacket(const HydraPacket* packet) {
 bool HydraSwitch::isPacketAvailable() {
 	this->loop();
 
-	return this->reply_ready;
+	return this->reply_ready || this->state_ready;
 }
 
 void HydraSwitch::loop() {
@@ -64,8 +64,9 @@ void HydraSwitch::loop() {
 	if (state != this->state) {
 		//FIXME: overflow
 		if (millis() >= this->switch_timeout) {
+			hydra_debug_param("Switch: State change:", this->state);
 			this->state = state;
-			this->state_ready;
+			this->state_ready = true;
 			this->switch_timeout = millis() + HYDRA_SWITCH_TIMEOUT;
 		}
 	}
@@ -76,7 +77,7 @@ bool HydraSwitch::readPacket(HydraPacket* packet) {
 		packet->part.to_addr = this->reply_to_address;
 		packet->part.to_service = this->reply_to_service;
 		packet->part.payload.type = HYDRA_PAYLOAD_SWITCH_TYPE_REPLY_STATE;
-		packet->data[0] = this->state;
+		packet->part.payload.data[0] = this->state;
 		this->reply_ready = false;
 		return true;
 	}
@@ -85,12 +86,14 @@ bool HydraSwitch::readPacket(HydraPacket* packet) {
 			packet->part.to_addr = this->config.parts.master_service.addr;
 			packet->part.to_service = this->config.parts.master_service.service;
 			packet->part.payload.type = HYDRA_PAYLOAD_SWITCH_TYPE_REPLY_STATE;
-			packet->data[0] = this->state;
+			packet->part.payload.data[0] = this->state;
+			hydra_debug_param("Switch: Send to master:", this->state);
 		} else {
 			packet->part.to_addr = this->config.parts.relay_service.addr;
 			packet->part.to_service = this->config.parts.relay_service.service;
 			packet->part.payload.type = HYDRA_PAYLOAD_RELAY_TYPE_COMMAND;
-			packet->data[0] = (this->state == HYDRA_SWITCH_STATE_ON) ? HYDRA_RELAY_STATE_ON : HYDRA_RELAY_STATE_OFF;
+			packet->part.payload.data[0] = (this->state == HYDRA_SWITCH_STATE_ON) ? HYDRA_RELAY_STATE_ON : HYDRA_RELAY_STATE_OFF;
+			hydra_debug_param("Switch: Send to relay:", this->state);
 		}
 		this->state_ready = false;
 		return true;

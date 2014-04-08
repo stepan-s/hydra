@@ -49,7 +49,7 @@ union HydraAddress {
 	} part;
 };
 
-union HydraAddressPort {
+struct HydraAddressPort {
 	HydraAddress addr;
 	uint8_t service;
 };

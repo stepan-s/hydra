@@ -24,6 +24,7 @@ class HydraRelay: public HydraComponent {
 	uint8_t reply_to_service;
 
 	uint8_t out_pin;
+	uint8_t state;
 	uint8_t next_state;
 	uint32_t switch_timeout;
 	void loop();

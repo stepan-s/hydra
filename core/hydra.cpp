@@ -342,6 +342,7 @@ void Hydra::loop() {
 					received_via.raw = ((HydraNetComponent*) item)->getAddress().raw;
 				} else {
 					received_via.raw = HYDRA_ADDR_LOCAL;
+					packet.part.from_addr.raw = HYDRA_ADDR_LOCAL;
 					packet.part.from_service = this->components->list[i].id;
 					packet.part.timestamp = this->getTime();
 				}
