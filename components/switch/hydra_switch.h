@@ -33,7 +33,7 @@ class HydraSwitch: public HydraComponent {
 
 	uint8_t in_pin;
 	uint8_t state;
-	uint32_t switch_timeout;
+	HydraTimeout switch_timeout;
 	void loop();
 
 public:

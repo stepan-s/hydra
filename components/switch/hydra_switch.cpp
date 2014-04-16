@@ -14,10 +14,12 @@ const HydraConfigValueDescriptionList HydraSwitch::config_value_description_list
 
 HydraSwitch::HydraSwitch(uint8_t in_pin) {
 	this->reply_ready = false;
-	this->reply_to_address = {HYDRA_ADDR_NULL};
+	this->reply_to_address.raw = HYDRA_ADDR_NULL;
 	this->reply_to_service = 0;
+	this->state_ready = false;
 	this->in_pin = in_pin;
-	this->switch_timeout = 0;
+	this->state = HYDRA_SWITCH_STATE_OFF;
+	this->switch_timeout.begin(0);
 }
 
 const char* HydraSwitch::getName() {
@@ -35,7 +37,7 @@ uint8_t* HydraSwitch::getConfig() {
 void HydraSwitch::init(Hydra* hydra) {
 	hydra_debug("HydraSwitch::init begin");
 	HydraComponent::init(hydra);
-	pinMode(this->in_pin, INPUT);
+	pinMode(this->in_pin, INPUT_PULLUP);
 	this->state = digitalRead(this->in_pin) ? HYDRA_SWITCH_STATE_ON : HYDRA_SWITCH_STATE_OFF;
 	this->reply_ready = false;
 	hydra_debug("HydraSwitch::init end");
@@ -60,14 +62,15 @@ bool HydraSwitch::isPacketAvailable() {
 }
 
 void HydraSwitch::loop() {
-	uint8_t state = digitalRead(this->in_pin) ? HYDRA_SWITCH_STATE_ON : HYDRA_SWITCH_STATE_OFF;
+	this->switch_timeout.tick();
+	uint8_t state = digitalRead(this->in_pin) ? HYDRA_SWITCH_STATE_OFF : HYDRA_SWITCH_STATE_ON;
 	if (state != this->state) {
 		//FIXME: overflow
-		if (millis() >= this->switch_timeout) {
+		if (this->switch_timeout.isEnd()) {
 			hydra_debug_param("Switch: State change:", this->state);
 			this->state = state;
 			this->state_ready = true;
-			this->switch_timeout = millis() + HYDRA_SWITCH_TIMEOUT;
+			this->switch_timeout.begin(HYDRA_SWITCH_TIMEOUT);
 		}
 	}
 }

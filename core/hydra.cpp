@@ -329,6 +329,8 @@ void Hydra::loop() {
 	int i;
 	HydraPacket packet;
 
+	HydraTimeout::calcDelta();
+
 	// enumerate services
 	for(i = 0; i < this->components->totalCount; ++i) {
 		this->updateTimer();
@@ -368,7 +370,7 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
 	int i;
 
 	HydraAddress destionation = packet->part.to_addr;
-	bool need_set_from_addr = (hydra_is_addr_local(received_via) && hydra_is_addr_null(packet->part.from_addr));
+	bool need_set_from_addr = (hydra_is_addr_local(received_via) && (hydra_is_addr_local(packet->part.from_addr) || hydra_is_addr_null(packet->part.from_addr)));
 	if (hydra_is_addr_null(destionation)) {
 		//drop
 	} else if (hydra_is_addr_local(destionation)) {
@@ -479,4 +481,28 @@ HydraAddress Hydra::getDefaultGateway() {
 bool Hydra::isMasterOnline() {
 	//FIXME:
 	return this->isTimeSynced();
+}
+
+uint16_t HydraTimeout::last = 0;
+uint16_t HydraTimeout::delta = 0;
+
+void HydraTimeout::begin(uint16_t ms) {
+	this->last = millis();
+	this->left = ms;
+}
+
+void HydraTimeout::tick() {
+	if (this->left) {
+		this->left -= (HydraTimeout::delta <= left) ? HydraTimeout::delta : left;
+	}
+}
+
+bool HydraTimeout::isEnd() {
+	return !this->left;
+}
+
+void HydraTimeout::calcDelta() {
+	uint16_t time = millis();
+	HydraTimeout::delta = time - HydraTimeout::last;
+	HydraTimeout::last = time;
 }

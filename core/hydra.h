@@ -166,4 +166,15 @@ public:
 	bool isMasterOnline();
 };
 
+class HydraTimeout {
+	static uint16_t last;
+	static uint16_t delta;
+	uint16_t left;
+public:
+	void begin(uint16_t ms);
+	void tick();
+	bool isEnd();
+	void static calcDelta();
+};
+
 #endif
