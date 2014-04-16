@@ -13,12 +13,13 @@ union NrfAddr {
 const char* HydraNrf::name = "NRF24";
 
 const HydraConfigValueDescriptionList HydraNrf::config_value_description_list = {
-	5, 22 + HYDRA_NRF_ROUTE_COUNT, (HydraConfigValueDescription[]) {
+	6, 24 + HYDRA_NRF_ROUTE_COUNT, (HydraConfigValueDescription[]) {
 		{2, "ADDR"},
 		{3, "NET"},
 		{1, "Channel"},
 		{16, "EncryptKey"},
 		{HYDRA_NRF_ROUTE_COUNT, "RouteToNETS"},
+		{2, "RadioOpts"}
 	}
 };
 
@@ -43,9 +44,18 @@ void HydraNrf::init(Hydra* hydra) {
 	hydra_debug("HydraNrf::init begin");
 	HydraComponent::init(hydra);
 	this->radio->begin();
-	//this->radio->setRetries(10, 5);
+	this->radio->setRetries(this->config.parts.radio_opts.retries_delay, this->config.parts.radio_opts.retries_count);
+	this->radio->setDataRate((rf24_datarate_e)(this->config.parts.radio_opts.speed));
+	this->radio->setPALevel((rf24_pa_dbm_e)this->config.parts.radio_opts.power);
+	this->radio->setCRCLength((rf24_crclength_e)this->config.parts.radio_opts.crc);
 	this->radio->setPayloadSize(HYDRA_PACKET_SIZE);
 	this->radio->setChannel(this->config.parts.channel);
+
+	hydra_debug_param("Rtr", this->radio->getRetries());
+	hydra_debug_param("Rte", this->radio->getDataRate());
+	hydra_debug_param("Crc", this->radio->getCRCLength());
+	hydra_debug_param("Pwr", this->radio->getPALevel());
+	hydra_debug_param("Tmo", this->radio->getMaxTimeout());
 
 	NrfAddr addr = {0};
 	NrfAddr bcaddr = {0};
@@ -56,15 +66,18 @@ void HydraNrf::init(Hydra* hydra) {
 	this->radio->openWritingPipe(bcaddr.a64);
 
 	this->radio->openReadingPipe(1, addr.a64);
+	this->radio->setAutoAck(1, true);
 	hydra_debug_param("HydraNrf::init listen lo ", addr.a32[0]);
 	hydra_debug_param("HydraNrf::init listen hi ", addr.a32[1]);
 
 	this->radio->openReadingPipe(2, bcaddr.a64);
-	//this->radio->setAutoAck(2, false);
+	this->radio->setAutoAck(2, false);
 	hydra_debug_param("HydraNrf::init listen lo ", bcaddr.a32[0]);
 	hydra_debug_param("HydraNrf::init listen hi ", bcaddr.a32[1]);
 
-	this->radio->setAutoAck(false);
+	if (!this->config.parts.radio_opts.auto_ack) {
+		this->radio->setAutoAck(false);
+	}
 	this->radio->startListening();
 	aes128_enc_single(this->config.parts.enc_key, this->enc_iv);
 	hydra_debug("HydraNrf::init end");
@@ -129,7 +142,7 @@ bool HydraNrf::sendPacket(const HydraAddress to, const HydraPacket* packet, cons
 
 	this->radio->stopListening();
 	this->radio->openWritingPipe(addr.a64);
-	bool result = this->radio->write(p.data, HYDRA_PACKET_SIZE);
+	bool result = this->radio->write(p.data, HYDRA_PACKET_SIZE, hydra_is_addr_to_net(to));
 	this->radio->startListening();
 
 	hydra_debug_param("HydraNrf::sendPacket result ", result);

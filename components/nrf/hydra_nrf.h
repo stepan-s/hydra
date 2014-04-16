@@ -3,7 +3,6 @@
 
 #include "hydra.h"
 #include <SPI.h>
-#include "nRF24L01.h"
 #include "RF24.h"
 
 #define HYDRA_NRF_BC 0xFF
@@ -18,6 +17,14 @@ struct HydraNrfConfig {
 			uint8_t channel;
 			uint8_t enc_key[16];
 			uint8_t net_routes[HYDRA_NRF_ROUTE_COUNT];
+			struct {
+				uint8_t retries_delay: 4;
+				uint8_t retries_count: 4;
+				uint8_t speed: 2;
+				uint8_t power: 2;
+				uint8_t crc: 2;
+				uint8_t auto_ack: 1;
+			} radio_opts;
 		} parts;
 	};
 };
