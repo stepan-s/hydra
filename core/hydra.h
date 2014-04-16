@@ -49,6 +49,11 @@ union HydraAddress {
 	} part;
 };
 
+struct HydraAddressPort {
+	HydraAddress addr;
+	uint8_t service;
+};
+
 struct HydraPacket {
 	union {
 		uint8_t data[HYDRA_PACKET_SIZE];
@@ -158,6 +163,18 @@ public:
 	int32_t getTimeZoneOffset();
 	void setTime(uint32_t timestamp, int16_t timezone_offset_minutes = 32768);
 	HydraAddress getDefaultGateway();
+	bool isMasterOnline();
+};
+
+class HydraTimeout {
+	static uint16_t last;
+	static uint16_t delta;
+	uint16_t left;
+public:
+	void begin(uint16_t ms);
+	void tick();
+	bool isEnd();
+	void static calcDelta();
 };
 
 #endif
