@@ -2,7 +2,7 @@
 #include <AESLib.h>
 #include "hydra_core.h"
 
-static const uint8_t enc_iv[16] = {'H', 'Y', 'D', 'R', 'A', ' ', 'N', 'F', 'R', ' ', 'A', 'E', 'S', ' ', 'I', 'V'};
+static const uint8_t _enc_iv[16] = {'H', 'Y', 'D', 'R', 'A', ' ', 'N', 'F', 'R', ' ', 'A', 'E', 'S', ' ', 'I', 'V'};
 
 union NrfAddr {
 	uint64_t a64;
@@ -25,7 +25,7 @@ const HydraConfigValueDescriptionList HydraNrf::config_value_description_list = 
 
 HydraNrf::HydraNrf(uint8_t cePin, uint8_t csPin) {
 	this->radio = new RF24(cePin, csPin);
-	memcpy(this->enc_iv, enc_iv, 16);
+	memcpy(this->enc_iv, _enc_iv, 16);
 }
 
 const char* HydraNrf::getName() {
