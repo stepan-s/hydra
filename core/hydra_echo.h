@@ -5,6 +5,8 @@
 #define HYDRA_ECHO_PAYLOAD_TYPE_REQUEST 0
 #define HYDRA_ECHO_PAYLOAD_TYPE_REPLY 1
 
+#define HYDRA_ECHO_PING_TIMEOUT 1000
+
 #include "hydra.h"
 
 struct HydraEchoConfig {
@@ -21,11 +23,10 @@ class HydraEcho: public HydraComponent {
 	static const HydraConfigValueDescriptionList config_value_description_list;
 	HydraEchoConfig config;
 	bool reply_ready;
-	HydraAddress reply_from_address;
 	HydraAddress reply_to_address;
 	uint16_t reply_to_service;
 	uint8_t reply_payload[HYDRA_PACKET_PAYLOAD_DATA_SIZE];
-	uint32_t timestamp;
+	HydraTimeout ping_timeout;
 
 public:
 	virtual const char* getName();

@@ -23,6 +23,8 @@
 #define HYDRA_SERVICE_COMPONENT_MIN 16
 #define HYDRA_SERVICE_PAYLOAD_TYPE_MIN 256
 
+#define HYDRA_MASTER_ONLINE_TIMEOUT 10000
+
 #define hydra_is_addr_to_all(addr) ((addr.raw & HYDRA_ADDR_BROADCAST_ALL) == HYDRA_ADDR_BROADCAST_ALL)
 #define hydra_is_addr_to_net(addr) ((addr.raw & HYDRA_ADDR_BROADCAST_NET) == HYDRA_ADDR_BROADCAST_NET)
 #define hydra_is_addr_to_devices(addr) ((addr.raw & HYDRA_ADDR_BROADCAST_DEVICES) == HYDRA_ADDR_BROADCAST_DEVICES)
@@ -89,6 +91,18 @@ struct HydraConfigValueDescriptionList {
 
 class Hydra;
 
+
+class HydraTimeout {
+	static uint16_t last;
+	static uint16_t delta;
+	uint16_t left;
+public:
+	void begin(uint16_t ms);
+	void tick();
+	bool isEnd();
+	void static calcDelta();
+};
+
 class HydraComponent {
 	/* Example
 	static const char* name;
@@ -144,6 +158,7 @@ class Hydra {
 	uint32_t timestamp;
 	int32_t timestamp_last;
 	int32_t timezone_offset_seconds;
+	HydraTimeout master_online_timeout;
 	HydraAddress default_gateway;
 	void consoleRun();
 	void consoleHelp();
@@ -172,17 +187,7 @@ public:
 	bool isMasterOnline();
 
 	friend class HydraConfig;
-};
-
-class HydraTimeout {
-	static uint16_t last;
-	static uint16_t delta;
-	uint16_t left;
-public:
-	void begin(uint16_t ms);
-	void tick();
-	bool isEnd();
-	void static calcDelta();
+	friend class HydraCore;
 };
 
 #endif

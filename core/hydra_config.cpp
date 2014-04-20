@@ -7,10 +7,6 @@ const char* HydraConfig::getName() {
 	return HydraConfig::name;
 }
 
-const HydraConfigValueDescriptionList* HydraConfig::getConfigDescription() {
-	return NULL;
-}
-
 void HydraConfig::init(Hydra* hydra) {
 	hydra_debug("HydraConfig::init begin");
 	HydraComponent::init(hydra);

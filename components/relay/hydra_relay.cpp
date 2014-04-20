@@ -3,11 +3,6 @@
 
 const char* HydraRelay::name = "Relay";
 
-const HydraConfigValueDescriptionList HydraRelay::config_value_description_list = {
-	0, 0, 0
-};
-
-
 HydraRelay::HydraRelay(uint8_t out_pin) {
 	this->reply_ready = false;
 	this->reply_to_address.raw = HYDRA_ADDR_NULL;
@@ -20,14 +15,6 @@ HydraRelay::HydraRelay(uint8_t out_pin) {
 
 const char* HydraRelay::getName() {
 	return HydraRelay::name;
-}
-
-const HydraConfigValueDescriptionList* HydraRelay::getConfigDescription() {
-	return & config_value_description_list;
-}
-
-uint8_t* HydraRelay::getConfig() {
-	return 0;
 }
 
 void HydraRelay::init(Hydra* hydra) {
@@ -68,7 +55,6 @@ bool HydraRelay::isPacketAvailable() {
 void HydraRelay::loop() {
 	this->switch_timeout.tick();
 	if (this->state != this->next_state) {
-		//FIXME: overflow
 		if (this->switch_timeout.isEnd()) {
 			hydra_debug_param("Relay: State changed:", this->next_state);
 			if (this->next_state == HYDRA_RELAY_STATE_ON) {

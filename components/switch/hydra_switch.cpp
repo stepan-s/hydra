@@ -6,8 +6,8 @@ const char* HydraSwitch::name = "Switch";
 
 const HydraConfigValueDescriptionList HydraSwitch::config_value_description_list = {
 	2, 6, (HydraConfigValueDescription[]) {
-		{3, "ControllerADDRPORT"},
-		{3, "DirectADDRPORT"},
+		{3, "CtrlServ"},
+		{3, "DrctServ"},
 	}
 };
 
@@ -65,7 +65,6 @@ void HydraSwitch::loop() {
 	this->switch_timeout.tick();
 	uint8_t state = digitalRead(this->in_pin) ? HYDRA_SWITCH_STATE_OFF : HYDRA_SWITCH_STATE_ON;
 	if (state != this->state) {
-		//FIXME: overflow
 		if (this->switch_timeout.isEnd()) {
 			hydra_debug_param("Switch: State change:", this->state);
 			this->state = state;

@@ -13,12 +13,8 @@
 
 #include "hydra.h"
 
-struct HydraRelayConfig {};
-
 class HydraRelay: public HydraComponent {
 	static const char* name;
-	static const HydraConfigValueDescriptionList config_value_description_list;
-	HydraRelayConfig config;
 	bool reply_ready;
 	HydraAddress reply_to_address;
 	uint8_t reply_to_service;
@@ -32,8 +28,6 @@ class HydraRelay: public HydraComponent {
 public:
 	HydraRelay(uint8_t out_pin1);
 	virtual const char* getName();
-	virtual const HydraConfigValueDescriptionList* getConfigDescription();
-	virtual uint8_t* getConfig();
 	virtual void init(Hydra* hydra);
 	virtual bool writePacket(const HydraPacket* packet);
 	virtual bool isPacketAvailable();

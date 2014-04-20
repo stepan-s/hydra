@@ -32,7 +32,6 @@ class HydraConfig: public HydraComponent {
 
 public:
 	virtual const char* getName();
-	virtual const HydraConfigValueDescriptionList* getConfigDescription();
 	virtual void init(Hydra* hydra);
 	virtual bool writePacket(const HydraPacket* packet);
 	virtual bool isPacketAvailable();

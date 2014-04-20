@@ -341,6 +341,7 @@ void Hydra::init() {
 		hydra_debug_param("Hydra::init component ", i);
 		this->components->list[i].component->init(this);
 	}
+	this->master_online_timeout.begin(0);
 	Serial.println("# Hydra is ready #");
 	hydra_debug("Hydra::init end");
 }
@@ -358,6 +359,7 @@ void Hydra::loop() {
 	HydraPacket packet;
 
 	HydraTimeout::calcDelta();
+	this->master_online_timeout.tick();
 
 	// enumerate services
 	for(i = 0; i < this->components->totalCount; ++i) {
@@ -507,8 +509,7 @@ HydraAddress Hydra::getDefaultGateway() {
 }
 
 bool Hydra::isMasterOnline() {
-	//FIXME:
-	return this->isTimeSynced();
+	return !this->master_online_timeout.isEnd();
 }
 
 uint16_t HydraTimeout::last = 0;
