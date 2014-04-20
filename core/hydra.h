@@ -20,6 +20,8 @@
 #define HYDRA_DEVICE_NULL 0x00
 
 #define HYDRA_SERVICE_NET 0
+#define HYDRA_SERVICE_COMPONENT_MIN 16
+#define HYDRA_SERVICE_PAYLOAD_TYPE_MIN 256
 
 #define hydra_is_addr_to_all(addr) ((addr.raw & HYDRA_ADDR_BROADCAST_ALL) == HYDRA_ADDR_BROADCAST_ALL)
 #define hydra_is_addr_to_net(addr) ((addr.raw & HYDRA_ADDR_BROADCAST_NET) == HYDRA_ADDR_BROADCAST_NET)
@@ -88,11 +90,15 @@ struct HydraConfigValueDescriptionList {
 class Hydra;
 
 class HydraComponent {
+	/* Example
+	static const char* name;
+	*/
+	/* Exmple
+	static const HydraConfigValueDescriptionList config_value_description_list;
+	*/
+
 public:
 	Hydra* hydra;
-	static const char* name;
-	static const HydraConfigValueDescriptionList config_value_description_list;
-
 	virtual const char* getName();
 	virtual const HydraConfigValueDescriptionList* getConfigDescription();
 	virtual uint8_t* getConfig();
@@ -164,6 +170,8 @@ public:
 	void setTime(uint32_t timestamp, int16_t timezone_offset_minutes = 32768);
 	HydraAddress getDefaultGateway();
 	bool isMasterOnline();
+
+	friend class HydraConfig;
 };
 
 class HydraTimeout {

@@ -2,7 +2,8 @@
 #define _HYDRA_CORE_ true
 
 #define HYDRA_SERVICE_CORE 1
-#define HYDRA_PAYLOAD_CORE_TYPE_SET_TIME 0
+#define HYDRA_CORE_PAYLOAD_TYPE_SET_TIME 0
+#define HYDRA_CORE_PAYLOAD_TYPE_REBOOT 1
 
 #include "hydra.h"
 
