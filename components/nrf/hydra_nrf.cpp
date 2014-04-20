@@ -95,7 +95,7 @@ bool HydraNrf::readPacket(HydraPacket* packet) {
 		hydra_debug_param("HydraNrf::readPacket received from_addr ", packet->part.from_addr.raw);
 		hydra_debug_param("HydraNrf::readPacket received to_addr ", packet->part.to_addr.raw);
 		uint32_t now = this->hydra->getTime();
-		if ((abs(now - packet->part.timestamp) > 2) and !((packet->part.to_service == HYDRA_SERVICE_CORE) and (packet->part.payload.type == HYDRA_PAYLOAD_CORE_TYPE_SET_TIME))) {
+		if ((abs(now - packet->part.timestamp) > 2) and !((packet->part.to_service == HYDRA_SERVICE_CORE) and (packet->part.payload.type == HYDRA_CORE_PAYLOAD_TYPE_SET_TIME))) {
 			hydra_debug_param("HydraNrf::readPacket packet expired ", abs(now - packet->part.timestamp));
 			return false;
 		}

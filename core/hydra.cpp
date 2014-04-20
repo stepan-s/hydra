@@ -4,18 +4,28 @@
 // HydraComponent
 /////////////////
 
+/* Example
 const char* HydraComponent::name = "Nil";
+*/
 
+/* Example
 const HydraConfigValueDescriptionList HydraComponent::config_value_description_list = {
 	0, 0, 0
 };
+*/
 
 const char* HydraComponent::getName() {
+	/* Example
 	return HydraComponent::name;
+	*/
+	return NULL;
 }
 
 const HydraConfigValueDescriptionList* HydraComponent::getConfigDescription() {
+	/* Example
 	return & config_value_description_list;
+	*/
+	return NULL;
 }
 
 uint8_t* HydraComponent::getConfig() {
@@ -40,6 +50,11 @@ bool HydraComponent::readPacket(HydraPacket* packet) {
 	return false;
 }
 
+/*
+HydraComponent::~HydraComponent() {
+
+}
+*/
 
 // HydraNetComponent
 ////////////////////
@@ -184,7 +199,12 @@ void Hydra::consolePrintHex(uint8_t *buffer, int length) {
 String Hydra::consoleGetConfigValueFullName(uint8_t index, uint8_t value_index) {
 	String name;
 	HydraComponentDescription* item = & this->components->list[index];
-	name = item->component->getName();
+	const char * component_name = item->component->getName();
+	if (component_name) {
+		name = component_name;
+	} else {
+		name = "?";
+	}
 	name.concat("[");
 	name.concat(index);
 	name.concat("].");
@@ -197,15 +217,17 @@ void Hydra::consolePrintConfig() {
 	for(i = 0; i < this->components->totalCount; ++i) {
 		HydraComponentDescription* item = & this->components->list[i];
 		const HydraConfigValueDescriptionList* config_description = item->component->getConfigDescription();
-		int offset = 0;
-		for(j = 0; j < config_description->count; ++j) {
-			String name = this->consoleGetConfigValueFullName(i, j);
-			Serial.print(name);
-			Serial.print('=');
-			uint8_t* config = item->component->getConfig();
-			this->consolePrintHex(config + offset, config_description->list[j].size);
-			Serial.print('\n');
-			offset += config_description->list[j].size;
+		if (config_description) {
+			int offset = 0;
+			for(j = 0; j < config_description->count; ++j) {
+				String name = this->consoleGetConfigValueFullName(i, j);
+				Serial.print(name);
+				Serial.print('=');
+				uint8_t* config = item->component->getConfig();
+				this->consolePrintHex(config + offset, config_description->list[j].size);
+				Serial.print('\n');
+				offset += config_description->list[j].size;
+			}
 		}
 	}
 }
@@ -254,13 +276,15 @@ bool Hydra::consoleSetConfigValue(String name, String value) {
 	for(i = 0; i < this->components->totalCount; ++i) {
 		HydraComponentDescription* item = & this->components->list[i];
 		const HydraConfigValueDescriptionList* config_description = item->component->getConfigDescription();
-		int offset = 0;
-		for(j = 0; j < config_description->count; ++j) {
-			String pname = this->consoleGetConfigValueFullName(i, j);
-			if (pname == name) {
-				return this->consoleParseHex(value, item->component->getConfig() + offset, config_description->list[j].size);
+		if (config_description) {
+			int offset = 0;
+			for(j = 0; j < config_description->count; ++j) {
+				String pname = this->consoleGetConfigValueFullName(i, j);
+				if (pname == name) {
+					return this->consoleParseHex(value, item->component->getConfig() + offset, config_description->list[j].size);
+				}
+				offset += config_description->list[j].size;
 			}
-			offset += config_description->list[j].size;
 		}
 	}
 	Serial.println("Param not found");
@@ -274,10 +298,12 @@ void Hydra::loadConfig() {
 	for(i = 0; i < this->components->totalCount; ++i) {
 		HydraComponentDescription* item = & this->components->list[i];
 		const HydraConfigValueDescriptionList* config_description = item->component->getConfigDescription();
-		uint8_t* config = item->component->getConfig();
-		for(j = 0; j < config_description->size; ++j) {
-			config[j] = EEPROM.read(offset);
-			++offset;
+		if (config_description) {
+			uint8_t* config = item->component->getConfig();
+			for(j = 0; j < config_description->size; ++j) {
+				config[j] = EEPROM.read(offset);
+				++offset;
+			}
 		}
 	}
 	hydra_debug("Hydra::loadConfig end");
@@ -290,12 +316,14 @@ void Hydra::saveConfig() {
 	for(i = 0; i < this->components->totalCount; ++i) {
 		HydraComponentDescription* item = & this->components->list[i];
 		const HydraConfigValueDescriptionList* config_description = item->component->getConfigDescription();
-		for(j = 0; j < config_description->size; ++j) {
-			uint8_t* config = item->component->getConfig();
-			if (config[j] != EEPROM.read(offset)) {
-				EEPROM.write(offset, config[j]);
+		if (config_description) {
+			for(j = 0; j < config_description->size; ++j) {
+				uint8_t* config = item->component->getConfig();
+				if (config[j] != EEPROM.read(offset)) {
+					EEPROM.write(offset, config[j]);
+				}
+				++offset;
 			}
-			++offset;
 		}
 	}
 	hydra_debug("Hydra::saveConfig end");
