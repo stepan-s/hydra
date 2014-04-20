@@ -50,6 +50,10 @@ void HydraNrf::init(Hydra* hydra) {
 	this->radio->setCRCLength((rf24_crclength_e)this->config.parts.radio_opts.crc);
 	this->radio->setPayloadSize(HYDRA_PACKET_SIZE);
 	this->radio->setChannel(this->config.parts.channel);
+	this->radio->setAutoAck(false);
+	if (this->config.parts.radio_opts.auto_ack) {
+		this->radio->setAutoAck(1, true);
+	}
 
 	hydra_debug_param("Rtr", this->radio->getRetries());
 	hydra_debug_param("Rte", this->radio->getDataRate());
@@ -66,18 +70,13 @@ void HydraNrf::init(Hydra* hydra) {
 	this->radio->openWritingPipe(bcaddr.a64);
 
 	this->radio->openReadingPipe(1, addr.a64);
-	this->radio->setAutoAck(1, true);
 	hydra_debug_param("HydraNrf::init listen lo ", addr.a32[0]);
 	hydra_debug_param("HydraNrf::init listen hi ", addr.a32[1]);
 
 	this->radio->openReadingPipe(2, bcaddr.a64);
-	this->radio->setAutoAck(2, false);
 	hydra_debug_param("HydraNrf::init listen lo ", bcaddr.a32[0]);
 	hydra_debug_param("HydraNrf::init listen hi ", bcaddr.a32[1]);
 
-	if (!this->config.parts.radio_opts.auto_ack) {
-		this->radio->setAutoAck(false);
-	}
 	this->radio->startListening();
 	aes128_enc_single(this->config.parts.enc_key, this->enc_iv);
 	hydra_debug("HydraNrf::init end");
