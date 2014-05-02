@@ -110,12 +110,14 @@ bool HydraNrf::readPacket(HydraPacket* packet) {
 		if (this->aes) {
 			uint8_t iv[16];
 			memcpy(iv, this->enc_iv, 16);
-			this->aes->cbc_encrypt(packet->data, packet->data, 2, iv);
+			this->aes->cbc_decrypt(packet->data, packet->data, 2, iv);
 		}
 		hydra_debug_param("HydraNrf::readPacket received from_addr ", packet->part.from_addr.raw);
 		hydra_debug_param("HydraNrf::readPacket received to_addr ", packet->part.to_addr.raw);
 		uint32_t now = this->hydra->getTime();
-		if (abs(now - packet->part.timestamp) <= 2) {
+		hydra_debug_param("Packet time ", packet->part.timestamp);
+		hydra_debug_param("System time ", now);
+		if (abs((int32_t)now - (int32_t)packet->part.timestamp) <= 2) {
 			//time diff <2sec pass packet
 			return true;
 		}
@@ -123,9 +125,10 @@ bool HydraNrf::readPacket(HydraPacket* packet) {
 			//for heartbeat packet, allow set time > now or if time not sync
 			return true;
 		}
+		hydra_fprintln("DROP PACKET invalid time/encryption");
 		hydra_debug_param("HydraNrf::readPacket packet expired ", abs(now - packet->part.timestamp));
-		hydra_debug_param("Packet time ", packet->part.timestamp);
-		hydra_debug_param("System time ", now);
+	} else {
+		hydra_fprintln("DROP PACKET invalid size");
 	}
 	return false;
 }
@@ -168,7 +171,7 @@ bool HydraNrf::sendPacket(const HydraAddress to, const HydraPacket* packet, cons
 	if (this->aes) {
 		uint8_t iv[16];
 		memcpy(iv, this->enc_iv, 16);
-		this->aes->cbc_decrypt(p.data, p.data, 2, iv);
+		this->aes->cbc_encrypt(p.data, p.data, 2, iv);
 	}
 
 	this->radio->stopListening();
