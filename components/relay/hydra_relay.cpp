@@ -30,12 +30,12 @@ void HydraRelay::init(Hydra* hydra) {
 bool HydraRelay::writePacket(const HydraPacket* packet) {
 	hydra_debug("HydraRelay::writePacket");
 	switch(packet->part.payload.type) {
-	case HYDRA_PAYLOAD_RELAY_TYPE_REQUEST_STATE:
+	case HYDRA_RELAY_PAYLOAD_TYPE_REQUEST_STATE:
 		this->reply_to_address = packet->part.from_addr;
 		this->reply_to_service = packet->part.from_service;
 		this->reply_ready = true;
 		break;
-	case HYDRA_PAYLOAD_RELAY_TYPE_COMMAND:
+	case HYDRA_RELAY_PAYLOAD_TYPE_COMMAND:
 		this->reply_to_address = packet->part.from_addr;
 		this->reply_to_service = packet->part.from_service;
 		this->next_state = packet->part.payload.data[0];
@@ -73,7 +73,7 @@ bool HydraRelay::readPacket(HydraPacket* packet) {
 	if (this->reply_ready) {
 		packet->part.to_addr = this->reply_to_address;
 		packet->part.to_service = this->reply_to_service;
-		packet->part.payload.type = HYDRA_PAYLOAD_RELAY_TYPE_REPLY_STATE;
+		packet->part.payload.type = HYDRA_RELAY_PAYLOAD_TYPE_REPLY_STATE;
 		packet->part.payload.data[0] = this->state;
 		this->reply_ready = false;
 		return true;

@@ -47,10 +47,17 @@ bool HydraEcho::writePacket(const HydraPacket* packet) {
 		break;
 	case HYDRA_ECHO_PAYLOAD_TYPE_REPLY:
 		if ((this->config.parts.addr.raw != HYDRA_ADDR_NULL) && (this->config.parts.addr.raw == packet->part.from_addr.raw)) {
-			--this->lost;
-			this->graph |= 1;
 			hydra_fprint("Pong rx ");
-			hydra_hprintln(packet->part.from_addr.raw);
+			hydra_hprint(packet->part.from_addr.raw);
+			if ((*(uint32_t *)packet->part.payload.data == this->sent) and !(this->graph & 1)) {
+				--this->lost;
+				this->graph |= 1;
+				hydra_print(' ');
+				hydra_print(HYDRA_ECHO_PING_TIMEOUT - this->ping_timeout.left());
+				hydra_fprintln(" ms");
+			} else {
+				hydra_fprintln(" wrong sequence");
+			}
 		}
 		break;
 	}
@@ -75,7 +82,12 @@ bool HydraEcho::readPacket(HydraPacket* packet) {
 	} else if ((this->config.parts.addr.raw != HYDRA_ADDR_NULL) && (this->ping_timeout.isEnd())) {
 		hydra_fprint("Lost packets ");
 		hydra_print(this->lost);
-		hydra_fprint(" [");
+		hydra_fprint(" (");
+		uint32_t perc = (this->lost * 1000) / this->sent;
+		hydra_print(this->sent ? perc / 10 : 0);
+		hydra_print('.');
+		hydra_print(this->sent ? perc % 10 : 0);
+		hydra_fprint("%) [");
 		uint64_t graph = this->graph;
 		for(uint8_t i = 0; i < 64; ++i) {
 			hydra_print((graph & 0x8000000000000000) ? '!' : '.');
@@ -84,14 +96,16 @@ bool HydraEcho::readPacket(HydraPacket* packet) {
 		hydra_fprintln("]");
 
 		++this->lost;
+		++this->sent;
 		this->graph <<= 1;
 
 		packet->part.to_addr = this->config.parts.addr;
-		packet->part.to_service = HYDRA_SERVICE_ECHO;
+		packet->part.to_service = HYDRA_ECHO_SERVICE_ID;
 		packet->part.payload.type = HYDRA_ECHO_PAYLOAD_TYPE_REQUEST;
-		this->ping_timeout.begin(HYDRA_ECHO_PING_TIMEOUT);
+		*(uint32_t *)packet->part.payload.data = this->sent;
 		hydra_fprint("Ping tx ");
 		hydra_hprintln(packet->part.to_addr.raw);
+		this->ping_timeout.begin(HYDRA_ECHO_PING_TIMEOUT);
 		return true;
 	} else {
 		return false;

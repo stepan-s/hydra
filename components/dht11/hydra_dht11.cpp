@@ -32,7 +32,7 @@ void HydraDht11::init(Hydra* hydra) {
 
 bool HydraDht11::writePacket(const HydraPacket* packet) {
 	hydra_debug("HydraDht11::writePacket");
-	if (packet->part.payload.type == HYDRA_PAYLOAD_DHT11_TYPE_REQUEST) {
+	if (packet->part.payload.type == HYDRA_DHT11_PAYLOAD_TYPE_REQUEST) {
 		this->reply_to_address = packet->part.from_addr;
 		this->reply_to_service = packet->part.from_service;
 		this->reply_ready = true;
@@ -60,7 +60,7 @@ bool HydraDht11::readPacket(HydraPacket* packet) {
 
 		packet->part.to_addr = this->reply_to_address;
 		packet->part.to_service = this->reply_to_service;
-		packet->part.payload.type = HYDRA_PAYLOAD_DHT11_TYPE_REPLY;
+		packet->part.payload.type = HYDRA_DHT11_PAYLOAD_TYPE_REPLY;
 		this->reply_ready = false;
 		return true;
 	} else {

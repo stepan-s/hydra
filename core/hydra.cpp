@@ -512,26 +512,30 @@ bool Hydra::isMasterOnline() {
 	return !this->master_online_timeout.isEnd();
 }
 
-uint16_t HydraTimeout::last = 0;
-uint16_t HydraTimeout::delta = 0;
+uint16_t HydraTimeout::last_ms = 0;
+uint16_t HydraTimeout::delta_ms = 0;
 
 void HydraTimeout::begin(uint16_t ms) {
-	this->last = millis();
-	this->left = ms;
+	this->last_ms = millis();
+	this->left_ms = ms;
 }
 
 void HydraTimeout::tick() {
-	if (this->left) {
-		this->left -= (HydraTimeout::delta <= left) ? HydraTimeout::delta : left;
+	if (this->left_ms) {
+		this->left_ms -= (HydraTimeout::delta_ms <= this->left_ms) ? HydraTimeout::delta_ms : this->left_ms;
 	}
 }
 
 bool HydraTimeout::isEnd() {
-	return !this->left;
+	return !this->left_ms;
+}
+
+uint16_t HydraTimeout::left() {
+	return this->left_ms;
 }
 
 void HydraTimeout::calcDelta() {
 	uint16_t time = millis();
-	HydraTimeout::delta = time - HydraTimeout::last;
-	HydraTimeout::last = time;
+	HydraTimeout::delta_ms = time - HydraTimeout::last_ms;
+	HydraTimeout::last_ms = time;
 }

@@ -111,12 +111,12 @@ void HydraBlindsDc::init(Hydra* hydra) {
 bool HydraBlindsDc::writePacket(const HydraPacket* packet) {
 	hydra_debug("HydraBlinds::writePacket");
 	switch(packet->part.payload.type) {
-	case HYDRA_PAYLOAD_BLINDS_DC_TYPE_REQUEST_STATE:
+	case HYDRA_BLINDS_DC_PAYLOAD_TYPE_REQUEST_STATE:
 		this->reply_to_address = packet->part.from_addr;
 		this->reply_to_service = packet->part.from_service;
 		this->reply_ready = true;
 		break;
-	case HYDRA_PAYLOAD_BLINDS_DC_TYPE_COMMAND:
+	case HYDRA_BLINDS_DC_PAYLOAD_TYPE_COMMAND:
 		this->reply_to_address = packet->part.from_addr;
 		this->reply_to_service = packet->part.from_service;
 		if (this->motor1) {
@@ -150,7 +150,7 @@ bool HydraBlindsDc::readPacket(HydraPacket* packet) {
 	if (this->reply_ready) {
 		packet->part.to_addr = this->reply_to_address;
 		packet->part.to_service = this->reply_to_service;
-		packet->part.payload.type = HYDRA_PAYLOAD_BLINDS_DC_TYPE_REPLY_STATE;
+		packet->part.payload.type = HYDRA_BLINDS_DC_PAYLOAD_TYPE_REPLY_STATE;
 		if (this->motor1) {
 			packet->part.payload.data[0] = (uint8_t) this->motor1->position;
 			packet->part.payload.data[1] = (uint8_t) this->motor1->position_dest;

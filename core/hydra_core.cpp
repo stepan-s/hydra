@@ -39,6 +39,7 @@ bool HydraCore::writePacket(const HydraPacket* packet) {
 		}
 		break;
 	case HYDRA_CORE_PAYLOAD_TYPE_REBOOT:
+		hydra_fprintln("REBOOT");
 		cli();                  // Clear interrupts
 		wdt_enable(WDTO_15MS);  // Set the Watchdog to 15ms
 		while(1);               // Enter an infinite loop

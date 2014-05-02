@@ -121,7 +121,7 @@ bool HydraNrf::readPacket(HydraPacket* packet) {
 			//time diff <2sec pass packet
 			return true;
 		}
-		if ((packet->part.to_service == HYDRA_SERVICE_CORE) and (packet->part.payload.type == HYDRA_CORE_PAYLOAD_TYPE_SET_TIME) and ((packet->part.timestamp > now) or !this->hydra->isTimeSynced())) {
+		if ((packet->part.to_service == HYDRA_CORE_SERVICE_ID) and (packet->part.payload.type == HYDRA_CORE_PAYLOAD_TYPE_SET_TIME) and ((packet->part.timestamp > now) or !this->hydra->isTimeSynced())) {
 			//for heartbeat packet, allow set time > now or if time not sync
 			return true;
 		}

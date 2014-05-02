@@ -34,9 +34,9 @@ void HydraWatch::init(Hydra* hydra) {
 bool HydraWatch::writePacket(const HydraPacket* packet) {
 	hydra_debug("HydraWatch::writePacket");
 	switch (packet->part.payload.type) {
-	case HYDRA_PAYLOAD_WATCH_TYPE_DISPLAY:
+	case HYDRA_WATCH_PAYLOAD_TYPE_DISPLAY:
 		break;
-	case HYDRA_PAYLOAD_WATCH_TYPE_BRIGHT:
+	case HYDRA_WATCH_PAYLOAD_TYPE_BRIGHT:
 		break;
 	}
 	return true;

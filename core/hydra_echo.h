@@ -1,7 +1,7 @@
 #ifndef _HYDRA_ECHO_
 #define _HYDRA_ECHO_ true
 
-#define HYDRA_SERVICE_ECHO 2
+#define HYDRA_ECHO_SERVICE_ID 2
 #define HYDRA_ECHO_PAYLOAD_TYPE_REQUEST 0
 #define HYDRA_ECHO_PAYLOAD_TYPE_REPLY 1
 
@@ -28,6 +28,7 @@ class HydraEcho: public HydraComponent {
 	uint8_t reply_payload[HYDRA_PACKET_PAYLOAD_DATA_SIZE];
 	HydraTimeout ping_timeout;
 	uint32_t lost;
+	uint32_t sent;
 	uint64_t graph;
 
 public:

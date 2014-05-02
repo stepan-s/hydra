@@ -19,9 +19,9 @@
 #define HYDRA_DEVICE_BROADCAST 0xFF
 #define HYDRA_DEVICE_NULL 0x00
 
-#define HYDRA_SERVICE_NET 0
-#define HYDRA_SERVICE_COMPONENT_MIN 16
-#define HYDRA_SERVICE_PAYLOAD_TYPE_MIN 256
+#define HYDRA_NET_SERVICE_ID 0
+#define HYDRA_SERVICE_ID_MIN 16
+#define HYDRA_PAYLOAD_TYPE_MIN 256
 
 #define HYDRA_TIME_SYNC_TIMEOUT 60000
 #define HYDRA_MASTER_ONLINE_TIMEOUT 10000
@@ -116,13 +116,14 @@ class Hydra;
 
 
 class HydraTimeout {
-	static uint16_t last;
-	static uint16_t delta;
-	uint16_t left;
+	static uint16_t last_ms;
+	static uint16_t delta_ms;
+	uint16_t left_ms;
 public:
 	void begin(uint16_t ms);
 	void tick();
 	bool isEnd();
+	uint16_t left();
 	void static calcDelta();
 };
 
