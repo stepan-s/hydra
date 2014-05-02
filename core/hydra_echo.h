@@ -27,8 +27,11 @@ class HydraEcho: public HydraComponent {
 	uint16_t reply_to_service;
 	uint8_t reply_payload[HYDRA_PACKET_PAYLOAD_DATA_SIZE];
 	HydraTimeout ping_timeout;
+	uint32_t lost;
+	uint64_t graph;
 
 public:
+	HydraEcho();
 	virtual const char* getName();
 	virtual const HydraConfigValueDescriptionList* getConfigDescription();
 	virtual uint8_t* getConfig();

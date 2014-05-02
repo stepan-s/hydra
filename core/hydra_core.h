@@ -9,9 +9,12 @@
 
 class HydraCore: public HydraComponent {
 	static const char* name;
+	bool online;
 
 public:
+	HydraCore();
 	virtual const char* getName();
+	virtual bool isPacketAvailable();
 	virtual bool writePacket(const HydraPacket* packet);
 };
 

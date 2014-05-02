@@ -18,14 +18,14 @@ const char* HydraComponent::getName() {
 	/* Example
 	return HydraComponent::name;
 	*/
-	return NULL;
+	return 0;
 }
 
 const HydraConfigValueDescriptionList* HydraComponent::getConfigDescription() {
 	/* Example
 	return & config_value_description_list;
 	*/
-	return NULL;
+	return 0;
 }
 
 uint8_t* HydraComponent::getConfig() {
@@ -78,7 +78,7 @@ bool HydraNetComponent::sendPacket(const HydraAddress to, const HydraPacket* pac
 }
 
 HydraAddress HydraNetComponent::getAddress() {
-	return {HYDRA_ADDR_NULL};
+	return (HydraAddress){HYDRA_ADDR_NULL};
 }
 
 // Hydra
@@ -88,12 +88,12 @@ Hydra::Hydra(HydraComponentDescriptionList* components) {
 	this->components = components;
 	this->ms = millis();
 	this->timestamp = 0;
-	this->timestamp_last = 0;
+	this->timezone_offset_seconds = 0;
 	this->default_gateway.raw = HYDRA_ADDR_NULL;
 }
 
 void Hydra::bootConsole() {
-	Serial.print("\nSend any to enter Hydra configuration console.");
+	hydra_fprintln("Send any to enter Hydra configuration console.");
 	byte countdown = HYDRA_BOOT_CONSOLE_WAIT_TIME * 10;
 	pinMode(13, OUTPUT);
 	while (countdown--) {
@@ -102,20 +102,20 @@ void Hydra::bootConsole() {
 			while(Serial.available() > 0) {
 				Serial.read();
 			}
-			Serial.print("\n");
+			hydra_print('\n');
 			this->consoleRun();
 			digitalWrite(13, LOW);
 			return;
 		}
-		Serial.print(".");
+		hydra_print('.');
 		digitalWrite(13, countdown & 1 ? HIGH : LOW);
 	}
-	Serial.print("\n");
+	hydra_print('\n');
 	digitalWrite(13, LOW);
 }
 
 void Hydra::consoleRun() {
-	Serial.println("Welcome to Hydra configuration console!");
+	hydra_fprintln("Welcome to Hydra configuration console!");
 	this->consoleHelp();
 	while(true) {
 		if (Serial.available()) {
@@ -131,11 +131,11 @@ void Hydra::consoleRun() {
 					break;
 				case 'r':
 					this->loadConfig();
-					Serial.println("Read from EEPROM");
+					hydra_fprintln("Read from EEPROM");
 					break;
 				case 'w':
 					this->saveConfig();
-					Serial.println("Write to EEPROM");
+					hydra_fprintln("Write to EEPROM");
 					break;
 				case 's':
 					{
@@ -145,7 +145,7 @@ void Hydra::consoleRun() {
 						String value = input.substring(pos + 1);
 						value.trim();
 						if (this->consoleSetConfigValue(name, value)) {
-							Serial.println("Set value successful");
+							hydra_fprintln("Set value successful");
 						}
 					}
 					break;
@@ -155,15 +155,15 @@ void Hydra::consoleRun() {
 						while(i < 2048) {
 							this->consolePrintHex((i >> 8) & 0xff);
 							this->consolePrintHex(i & 0xff);
-							Serial.print(' ');
+							hydra_print(' ');
 							this->consolePrintHex((uint8_t *) i, 32);
-							Serial.print('\n');
+							hydra_print('\n');
 							i += 32;
 						}
 					}
 					break;
 				default:
-					Serial.println("Unknown command");
+					hydra_fprintln("Unknown command");
 			}
 		}
 		digitalWrite(13, millis() & 0x400 ? HIGH : LOW);
@@ -171,21 +171,21 @@ void Hydra::consoleRun() {
 }
 
 void Hydra::consoleHelp() {
-	Serial.println("Commands:");
-	Serial.println("q - Quit");
-	Serial.println("h - Help");
-	Serial.println("p - Print current values");
-	Serial.println("r - Read from EEPROM");
-	Serial.println("w - Write to EEPROM");
-	Serial.println("s param=hex - Set value, like in 'p'");
+	hydra_fprintln("Commands:");
+	hydra_fprintln("q - Quit");
+	hydra_fprintln("h - Help");
+	hydra_fprintln("p - Print current values");
+	hydra_fprintln("r - Read from EEPROM");
+	hydra_fprintln("w - Write to EEPROM");
+	hydra_fprintln("s param=hex - Set value, like in 'p'");
 }
 
 
 void Hydra::consolePrintHex(uint8_t value) {
 	if (value < 0x10) {
-		Serial.print('0');
+		hydra_print('0');
 	}
-	Serial.print(value, HEX);
+	hydra_hprint(value);
 }
 
 void Hydra::consolePrintHex(uint8_t *buffer, int length) {
@@ -221,11 +221,11 @@ void Hydra::consolePrintConfig() {
 			int offset = 0;
 			for(j = 0; j < config_description->count; ++j) {
 				String name = this->consoleGetConfigValueFullName(i, j);
-				Serial.print(name);
-				Serial.print('=');
+				hydra_print(name);
+				hydra_print('=');
 				uint8_t* config = item->component->getConfig();
 				this->consolePrintHex(config + offset, config_description->list[j].size);
-				Serial.print('\n');
+				hydra_print('\n');
 				offset += config_description->list[j].size;
 			}
 		}
@@ -234,7 +234,7 @@ void Hydra::consolePrintConfig() {
 
 bool Hydra::consoleParseHex(String hex, uint8_t* buffer, uint8_t length) {
 	if (hex.length() != length * 2) {
-		Serial.println("Wrong value length");
+		hydra_fprintln("Wrong value length");
 		return false;
 	}
 
@@ -251,11 +251,11 @@ bool Hydra::consoleParseHex(String hex, uint8_t* buffer, uint8_t length) {
 		} else if ((c >= 'a') && (c <= 'f')) {
 			b = c - 'a' + 0x0A;
 		} else {
-			Serial.print("Wrong value symbol at ");
-			Serial.print(i);
-			Serial.print(" '");
-			Serial.print(c);
-			Serial.println("'.");
+			hydra_fprint("Wrong value symbol at ");
+			hydra_print(i);
+			hydra_fprint(" '");
+			hydra_print(c);
+			hydra_fprintln("'.");
 			return false;
 		}
 		if (i & 1) {
@@ -287,7 +287,7 @@ bool Hydra::consoleSetConfigValue(String name, String value) {
 			}
 		}
 	}
-	Serial.println("Param not found");
+	hydra_fprintln("Param not found");
 	return false;
 }
 
@@ -331,18 +331,20 @@ void Hydra::saveConfig() {
 
 void Hydra::init() {
 	hydra_debug("Hydra::init begin");
-	Serial.println("# Hydra wakes #");
+	hydra_fprintln("Hydra v1");
+	hydra_fprintln("START");
 	this->loadConfig();
 	this->bootConsole();
 
-	Serial.println("# Hydra awake #");
+	hydra_fprintln("INIT");
 	int i;
 	for(i = 0; i < this->components->totalCount; ++i) {
 		hydra_debug_param("Hydra::init component ", i);
 		this->components->list[i].component->init(this);
 	}
 	this->master_online_timeout.begin(0);
-	Serial.println("# Hydra is ready #");
+	this->time_sync_timeout.begin(0);
+	hydra_fprintln("READY");
 	hydra_debug("Hydra::init end");
 }
 
@@ -354,12 +356,12 @@ void Hydra::updateTimer() {
 }
 
 void Hydra::loop() {
-	//hydra_debug("Hydra::loop begin");
 	int i;
 	HydraPacket packet;
 
 	HydraTimeout::calcDelta();
 	this->master_online_timeout.tick();
+	this->time_sync_timeout.tick();
 
 	// enumerate services
 	for(i = 0; i < this->components->totalCount; ++i) {
@@ -382,7 +384,6 @@ void Hydra::loop() {
 			}
 		}
 	}
-	//hydra_debug("Hydra::loop end");
 }
 
 void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
@@ -393,9 +394,9 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
 	hydra_debug_param("Hydra::route packet to_service ", packet->part.to_service);
 	hydra_debug_param("Hydra::route packet timestamp ", packet->part.timestamp);
 	#ifdef HYDRA_DEBUG
-		Serial.print("Packet raw: ");
+		hydra_fprint("Packet raw: ");
 		this->consolePrintHex((uint8_t*)packet, HYDRA_PACKET_SIZE);
-		Serial.print('\n');
+		hydra_print('\n');
 	#endif
 	int i;
 
@@ -404,7 +405,7 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
 	if (hydra_is_addr_null(destionation)) {
 		//drop
 	} else if (hydra_is_addr_local(destionation)) {
-		this->landing(packet, received_via, {HYDRA_ADDR_LOCAL});
+		this->landing(packet, received_via, (HydraAddress){HYDRA_ADDR_LOCAL});
 	} else if (hydra_is_addr_to_all(destionation)) {
 		//send to all nets (exclude source)
 		for(i = 0; i < this->components->netifCount; ++i) {
@@ -492,12 +493,11 @@ int32_t Hydra::getTimeZoneOffset() {
 }
 
 bool Hydra::isTimeSynced() {
-	return this->timestamp_last ? abs(this->timestamp - this->timestamp_last) < 600 : false;
+	return !this->time_sync_timeout.isEnd();
 }
 
 void Hydra::setTime(uint32_t timestamp, int16_t timezone_offset_minutes) {
 	this->timestamp = timestamp;
-	this->timestamp_last = timestamp;
 	if ((timezone_offset_minutes <= 720) || (timezone_offset_minutes >= -720)) {
 		this->timezone_offset_seconds = timezone_offset_minutes;
 		this->timezone_offset_seconds *= 60;

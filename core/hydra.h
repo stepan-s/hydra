@@ -23,6 +23,7 @@
 #define HYDRA_SERVICE_COMPONENT_MIN 16
 #define HYDRA_SERVICE_PAYLOAD_TYPE_MIN 256
 
+#define HYDRA_TIME_SYNC_TIMEOUT 60000
 #define HYDRA_MASTER_ONLINE_TIMEOUT 10000
 
 #define hydra_is_addr_to_all(addr) ((addr.raw & HYDRA_ADDR_BROADCAST_ALL) == HYDRA_ADDR_BROADCAST_ALL)
@@ -35,14 +36,36 @@
 	#define HYDRA_BOOT_CONSOLE_WAIT_TIME 3
 #endif
 
-#define hydra_debug_(msg)					Serial.println(msg)
-#define hydra_debug_param_(msg, param)		Serial.print(msg); Serial.println(param)
+#define hydra_debug_(msg)					Serial.println(F(msg))
+#define hydra_debug_param_(msg, param)		Serial.print(F(msg)); Serial.println(param)
 #ifdef HYDRA_DEBUG
-	#define hydra_debug(msg)					Serial.println(msg)
-	#define hydra_debug_param(msg, param)		/*Serial.print(msg);*/ Serial.println(param)
+	#define hydra_debug(msg)					hydra_debug_(msg)
+	#define hydra_debug_param(msg, param)		hydra_debug_param_(msg, param)
 #else
 	#define hydra_debug(msg)
 	#define hydra_debug_param(msg, param)
+#endif
+
+#define hydra_print_(msg)					Serial.print(msg)
+#define hydra_println_(msg)					Serial.println(msg)
+#define hydra_fprint_(msg)					Serial.print(F(msg))
+#define hydra_fprintln_(msg)				Serial.println(F(msg))
+#define hydra_hprint_(msg)					Serial.print(msg, HEX)
+#define hydra_hprintln_(msg)				Serial.println(msg, HEX)
+#ifndef HYDRA_NOPRINT
+	#define hydra_print(msg)				hydra_print_(msg)
+	#define hydra_println(msg)				hydra_println_(msg)
+	#define hydra_fprint(msg)				hydra_fprint_(msg)
+	#define hydra_fprintln(msg)				hydra_fprintln_(msg)
+	#define hydra_hprint(msg)				hydra_hprint_(msg)
+	#define hydra_hprintln(msg)				hydra_hprintln_(msg)
+#else
+	#define hydra_print(msg)
+	#define hydra_println(msg)
+	#define hydra_fprint(msg)
+	#define hydra_fprintln(msg)
+	#define hydra_hprint(msg)
+	#define hydra_hprintln(msg)
 #endif
 
 union HydraAddress {
@@ -156,8 +179,8 @@ class Hydra {
 	HydraComponentDescriptionList* components;
 	uint32_t ms;
 	uint32_t timestamp;
-	int32_t timestamp_last;
 	int32_t timezone_offset_seconds;
+	HydraTimeout time_sync_timeout;
 	HydraTimeout master_online_timeout;
 	HydraAddress default_gateway;
 	void consoleRun();

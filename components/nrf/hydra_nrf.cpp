@@ -1,5 +1,5 @@
 #include "hydra_nrf.h"
-#include <AESLib.h>
+//#include <AESLib.h>
 #include "hydra_core.h"
 
 static const uint8_t _enc_iv[16] = {'H', 'Y', 'D', 'R', 'A', ' ', 'N', 'F', 'R', ' ', 'A', 'E', 'S', ' ', 'I', 'V'};
@@ -52,6 +52,7 @@ void HydraNrf::init(Hydra* hydra) {
 	this->radio->setChannel(this->config.parts.channel);
 	this->radio->setAutoAck(false);
 	if (this->config.parts.radio_opts.auto_ack) {
+		this->radio->enableDynamicPayloads();
 		this->radio->setAutoAck(1, true);
 	}
 
@@ -78,7 +79,21 @@ void HydraNrf::init(Hydra* hydra) {
 	hydra_debug_param("HydraNrf::init listen hi ", bcaddr.a32[1]);
 
 	this->radio->startListening();
-	aes128_enc_single(this->config.parts.enc_key, this->enc_iv);
+	//aes128_enc_single(this->config.parts.enc_key, this->enc_iv);
+	uint8_t encryption_enabled = 0;
+	for(int i = 0; i < 16; i++) {
+		encryption_enabled |= this->config.parts.enc_key[i];
+	}
+	if (encryption_enabled) {
+		this->aes = new AES();
+		this->aes->set_key(this->config.parts.enc_key, 16);
+		this->aes->encrypt(this->enc_iv, this->enc_iv);
+		hydra_debug("HydraNrf::encryption enabled");
+	} else {
+		this->aes = 0;
+		hydra_debug("HydraNrf::encryption disabled");
+	}
+
 	hydra_debug("HydraNrf::init end");
 }
 
@@ -87,20 +102,32 @@ bool HydraNrf::isPacketAvailable() {
 }
 
 bool HydraNrf::readPacket(HydraPacket* packet) {
-	//if (this->radio->available()) {
-		hydra_debug("HydraNrf::readPacket");
-		this->radio->read(packet->data, HYDRA_PACKET_SIZE);
-		aes128_cbc_dec(this->config.parts.enc_key, this->enc_iv, packet->data, HYDRA_PACKET_SIZE);
+	hydra_debug("HydraNrf::readPacket");
+	uint8_t length = this->radio->getDynamicPayloadSize();
+	this->radio->read(packet->data, min(length, HYDRA_PACKET_SIZE));
+	if (length == HYDRA_PACKET_SIZE) {
+		//aes128_cbc_dec(this->config.parts.enc_key, this->enc_iv, packet->data, HYDRA_PACKET_SIZE);
+		if (this->aes) {
+			uint8_t iv[16];
+			memcpy(iv, this->enc_iv, 16);
+			this->aes->cbc_encrypt(packet->data, packet->data, 2, iv);
+		}
 		hydra_debug_param("HydraNrf::readPacket received from_addr ", packet->part.from_addr.raw);
 		hydra_debug_param("HydraNrf::readPacket received to_addr ", packet->part.to_addr.raw);
 		uint32_t now = this->hydra->getTime();
-		if ((abs(now - packet->part.timestamp) > 2) and !((packet->part.to_service == HYDRA_SERVICE_CORE) and (packet->part.payload.type == HYDRA_CORE_PAYLOAD_TYPE_SET_TIME))) {
-			hydra_debug_param("HydraNrf::readPacket packet expired ", abs(now - packet->part.timestamp));
-			return false;
+		if (abs(now - packet->part.timestamp) <= 2) {
+			//time diff <2sec pass packet
+			return true;
 		}
-		return true;
-	//}
-	//return false;
+		if ((packet->part.to_service == HYDRA_SERVICE_CORE) and (packet->part.payload.type == HYDRA_CORE_PAYLOAD_TYPE_SET_TIME) and ((packet->part.timestamp > now) or !this->hydra->isTimeSynced())) {
+			//for heartbeat packet, allow set time > now or if time not sync
+			return true;
+		}
+		hydra_debug_param("HydraNrf::readPacket packet expired ", abs(now - packet->part.timestamp));
+		hydra_debug_param("Packet time ", packet->part.timestamp);
+		hydra_debug_param("System time ", now);
+	}
+	return false;
 }
 
 HydraAddress HydraNrf::getGateway(const HydraAddress destionation) {
@@ -137,7 +164,12 @@ bool HydraNrf::sendPacket(const HydraAddress to, const HydraPacket* packet, cons
 	hydra_debug_param("HydraNrf::sendPacket lo ", addr.a32[0]);
 	hydra_debug_param("HydraNrf::sendPacket hi ", addr.a32[1]);
 
-	aes128_cbc_enc(this->config.parts.enc_key, this->enc_iv, p.data, HYDRA_PACKET_SIZE);
+	//aes128_cbc_enc(this->config.parts.enc_key, this->enc_iv, p.data, HYDRA_PACKET_SIZE);
+	if (this->aes) {
+		uint8_t iv[16];
+		memcpy(iv, this->enc_iv, 16);
+		this->aes->cbc_decrypt(p.data, p.data, 2, iv);
+	}
 
 	this->radio->stopListening();
 	this->radio->openWritingPipe(addr.a64);

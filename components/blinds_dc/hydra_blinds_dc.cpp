@@ -72,7 +72,7 @@ void HydraBlindsDcMotor::setDestionationPosition(int8_t position) {
 
 HydraBlindsDc::HydraBlindsDc(uint8_t sensor1_pin, uint8_t motor1_pin1, uint8_t motor1_pin2, uint8_t sensor2_pin, uint8_t motor2_pin1, uint8_t motor2_pin2) {
 	this->reply_ready = false;
-	this->reply_to_address = {HYDRA_ADDR_NULL};
+	this->reply_to_address = (HydraAddress){HYDRA_ADDR_NULL};
 	this->reply_to_service = 0;
 
 	uint8_t threshold = this->config.parts.threshold;
@@ -80,12 +80,12 @@ HydraBlindsDc::HydraBlindsDc(uint8_t sensor1_pin, uint8_t motor1_pin1, uint8_t m
 	if (sensor1_pin && motor1_pin1 && motor1_pin2) {
 		this->motor1 = new HydraBlindsDcMotor(sensor1_pin, motor1_pin1, motor1_pin2, threshold);
 	} else {
-		this->motor1 = NULL;
+		this->motor1 = 0;
 	}
 	if (sensor2_pin && motor2_pin1 && motor2_pin2) {
 		this->motor2 = new HydraBlindsDcMotor(sensor2_pin, motor2_pin1, motor2_pin2, threshold);
 	} else {
-		this->motor2 = NULL;
+		this->motor2 = 0;
 	}
 }
 

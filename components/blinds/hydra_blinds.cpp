@@ -12,7 +12,7 @@ const HydraConfigValueDescriptionList HydraBlinds::config_value_description_list
 
 HydraBlinds::HydraBlinds(uint8_t sensorPin, uint8_t motorPin1, uint8_t motorPin2, uint8_t motorPin3, uint8_t motorPin4) {
 	this->reply_ready = false;
-	this->reply_to_address = {HYDRA_ADDR_NULL};
+	this->reply_to_address = (HydraAddress){HYDRA_ADDR_NULL};
 	this->reply_to_service = 0;
 	this->sensor_pin = sensorPin;
 	this->motor = new AccelStepper(AccelStepper::HALF4WIRE, motorPin1, motorPin2, motorPin3, motorPin4, false);

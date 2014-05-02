@@ -3,6 +3,7 @@
 
 #include "hydra.h"
 #include <SPI.h>
+#include <AES.h>
 #include "RF24.h"
 
 #define HYDRA_NRF_BC 0xFF
@@ -10,7 +11,7 @@
 
 struct HydraNrfConfig {
 	union {
-		uint8_t raw[22 + HYDRA_NRF_ROUTE_COUNT];
+		uint8_t raw[24 + HYDRA_NRF_ROUTE_COUNT];
 		struct {
 			HydraAddress addr;
 			uint8_t net[3];
@@ -35,6 +36,7 @@ class HydraNrf: public HydraNetComponent {
 	HydraNrfConfig config;
 	RF24* radio;
 	uint8_t enc_iv[16];
+	AES* aes;
 
 public:
 	HydraNrf(uint8_t cePin, uint8_t csPin);
