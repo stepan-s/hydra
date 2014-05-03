@@ -59,26 +59,83 @@ HydraComponent::~HydraComponent() {
 // HydraNetComponent
 ////////////////////
 
+/* Example
+const HydraConfigValueDescriptionList HydraNetComponent::config_value_description_list = {
+	2, 2 + HYDRA_NET_ROUTE_COUNT * 2, (HydraConfigValueDescription[]) {
+		{2, "ADDR"},
+		{HYDRA_NET_ROUTE_COUNT * 2, "RouteToNETS"},
+	}
+};
+*/
+
+/* Example
+const HydraConfigValueDescriptionList* HydraNetComponent::getConfigDescription() {
+	return & config_value_description_list;
+}
+*/
+
+/* Example
+uint8_t* HydraNetComponent::getConfig() {
+	return this->config.raw;
+}
+*/
+
 bool HydraNetComponent::writePacket(const HydraPacket* packet) {
 	HydraAddress gateway = this->getGateway(packet->part.to_addr);
 	if ((gateway.raw != HYDRA_ADDR_NULL) && (gateway.raw != HYDRA_ADDR_LOCAL)) {
-		return this->sendPacket(packet->part.to_addr, packet, hydra_is_addr_local(packet->part.from_addr));
+		HydraPacket p;
+		memcpy(& p, packet, HYDRA_PACKET_SIZE);
+		if (hydra_is_addr_local(packet->part.from_addr)) {
+			p.part.from_addr = this->getAddress();
+		}
+		return this->sendPacket(gateway, & p);
 	} else {
 		return false;
 	}
 }
 
-HydraAddress HydraNetComponent::getGateway(HydraAddress destionation) {
-	destionation.raw = HYDRA_ADDR_NULL;
-	return destionation;
-}
-
-bool HydraNetComponent::sendPacket(const HydraAddress to, const HydraPacket* packet, const bool set_from_addr) {
+bool HydraNetComponent::sendPacket(const HydraAddress to, const HydraPacket* packet) {
 	return false;
 }
 
+bool HydraNetComponent::sendPacketFrom(const HydraAddress to, const HydraPacket* packet) {
+	HydraPacket p;
+	memcpy(& p, packet, HYDRA_PACKET_SIZE);
+	p.part.from_addr = this->getAddress();
+	return this->sendPacket(to, & p);
+}
+
+HydraAddress HydraNetComponent::getGateway(HydraAddress destination) {
+	HydraNetConfig* config = (HydraNetConfig*)this->getConfig();
+	if (config->parts.addr.part.net == destination.part.net) {
+		//to connected network
+		if (config->parts.addr.part.device == destination.part.device) {
+			//to me
+			return (HydraAddress){HYDRA_ADDR_LOCAL};
+		} else {
+			//can send direct to destination
+			return destination;
+		}
+	} else {
+		//other network, check routes
+		int i;
+		if (destination.part.net != 0) {
+			for(i = 0; i < HYDRA_NET_ROUTE_COUNT; ++i) {
+				if (config->parts.routes[i].to_net == destination.part.net) {
+					//found route to net via gate in connected network
+					destination.part.net = config->parts.addr.part.net;
+					destination.part.device = config->parts.routes[i].via_device;
+					return destination;
+				}
+			}
+		}
+		//no route found
+		return (HydraAddress){HYDRA_ADDR_NULL};
+	}
+}
+
 HydraAddress HydraNetComponent::getAddress() {
-	return (HydraAddress){HYDRA_ADDR_NULL};
+	return ((HydraNetConfig*)this->getConfig())->parts.addr;
 }
 
 // Hydra
@@ -400,50 +457,69 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
 	#endif
 	int i;
 
-	HydraAddress destionation = packet->part.to_addr;
+	HydraAddress destination = packet->part.to_addr;
 	bool need_set_from_addr = (hydra_is_addr_local(received_via) && (hydra_is_addr_local(packet->part.from_addr) || hydra_is_addr_null(packet->part.from_addr)));
-	if (hydra_is_addr_null(destionation)) {
+
+	if (hydra_is_addr_null(destination)) {
 		//drop
-	} else if (hydra_is_addr_local(destionation)) {
+	} else if (hydra_is_addr_local(destination)) {
 		this->landing(packet, received_via, (HydraAddress){HYDRA_ADDR_LOCAL});
-	} else if (hydra_is_addr_to_all(destionation)) {
+	} else if (hydra_is_addr_to_all(destination)) {
 		//send to all nets (exclude source)
 		for(i = 0; i < this->components->netifCount; ++i) {
 			HydraNetComponent* item = this->components->list[i].netif.component;
 			if (received_via.raw != item->getAddress().raw) {
-				item->sendPacket(destionation, packet, need_set_from_addr);
+				if (need_set_from_addr) {
+					item->sendPacketFrom(destination, packet);
+				} else {
+					item->sendPacket(destination, packet);
+				}
 			}
 		}
 		//and to me
 		this->landing(packet, received_via, received_via);
 
-	} else if (hydra_is_addr_to_net(destionation)) {
+	} else if (hydra_is_addr_to_net(destination)) {
 		//send to exactly to net (exclude source)
 		for(i = 0; i < this->components->netifCount; ++i) {
 			HydraNetComponent* item = this->components->list[i].netif.component;
 			HydraAddress gateway = item->getGateway(packet->part.to_addr);
 			if (gateway.raw != HYDRA_ADDR_NULL) {
-				if (received_via.raw != item->getAddress().raw) {
-					item->sendPacket(destionation, packet, need_set_from_addr);
+				HydraAddress if_addr = item->getAddress();
+				if (received_via.raw != if_addr.raw) {
+					//send other devices or net
+					if (need_set_from_addr) {
+						item->sendPacketFrom(gateway, packet);
+					} else {
+						item->sendPacket(gateway, packet);
+					}
 				}
-				//and to me
-				this->landing(packet, received_via, item->getAddress());
+				if (hydra_is_addr_to_net(gateway) && (if_addr.part.net == destination.part.net)) {
+					//and to me
+					this->landing(packet, received_via, if_addr);
+				}
 				break;
 			}
 		}
 
-	} else if (hydra_is_addr_to_devices(destionation)) {
+	} else if (hydra_is_addr_to_devices(destination)) {
 		//send to all nets (exclude source)
 		bool landed = false;
 		for(i = 0; i < this->components->netifCount; ++i) {
 			HydraNetComponent* item = this->components->list[i].netif.component;
-			if (received_via.raw != item->getAddress().raw) {
-				item->sendPacket(destionation, packet, need_set_from_addr);
+			HydraAddress if_addr = item->getAddress();
+			if (received_via.raw != if_addr.raw) {
+				//to other net
+				if (need_set_from_addr) {
+					item->sendPacketFrom(destination, packet);
+				} else {
+					item->sendPacket(destination, packet);
+				}
 			}
-			if (!landed && (destionation.part.device == item->getAddress().part.device)) {
+			if (!landed && (destination.part.device == if_addr.part.device)) {
 				//and me
 				landed = true;
-				this->landing(packet, received_via, item->getAddress());
+				this->landing(packet, received_via, if_addr);
 			}
 		}
 
@@ -451,12 +527,17 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
 		for(i = 0; i < this->components->netifCount; ++i) {
 			HydraNetComponent* item = this->components->list[i].netif.component;
 			HydraAddress gateway = item->getGateway(packet->part.to_addr);
+			HydraAddress if_addr = item->getAddress();
 			if (gateway.raw == HYDRA_ADDR_LOCAL) {
-				this->landing(packet, received_via, item->getAddress());
+				this->landing(packet, received_via, if_addr);
 				break;
 			} else if (gateway.raw != HYDRA_ADDR_NULL) {
-				if (received_via.raw != item->getAddress().raw) {
-					item->sendPacket(gateway, packet, need_set_from_addr);
+				if (received_via.raw != if_addr.raw) {
+					if (need_set_from_addr) {
+						item->sendPacketFrom(gateway, packet);
+					} else {
+						item->sendPacket(gateway, packet);
+					}
 					break;
 				}
 			}

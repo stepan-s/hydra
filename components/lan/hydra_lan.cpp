@@ -3,13 +3,12 @@
 const char* HydraLan::name = "LAN";
 
 const HydraConfigValueDescriptionList HydraLan::config_value_description_list = {
-	6, 20, (HydraConfigValueDescription[]) {
+	5, 14 + HYDRA_NET_ROUTE_COUNT * 2, (HydraConfigValueDescription[]) {
 		{2, "ADDR"},
+		{HYDRA_NET_ROUTE_COUNT * 2, "Routes"},
 		{6, "MAC"},
-		{4, "LocalIP"},
-		{2, "LocalPORT"},
-		{4, "GatewayIP"},
-		{2, "GatewayPORT"}
+		{4, "IP"},
+		{2, "PORT"}
 	}
 };
 
@@ -31,11 +30,10 @@ uint8_t* HydraLan::getConfig() {
 void HydraLan::init(Hydra* hydra) {
 	hydra_debug("HydraLan::init begin");
 	HydraComponent::init(hydra);
-	this->gateway_ip = IPAddress(this->config.parts.gateway_ip);
-	Ethernet.begin(this->config.parts.mac, IPAddress(this->config.parts.local_ip), this->gateway_ip, this->gateway_ip);
-	this->udp.begin(this->config.parts.local_port);
-	hydra_debug_param("HydraLan::init IP ", IPAddress(this->config.parts.local_ip));
-	hydra_debug_param("HydraLan::init PORT ", this->config.parts.local_port);
+	Ethernet.begin(this->config.parts.mac, IPAddress(this->config.parts.ip));
+	this->udp.begin(this->config.parts.port);
+	hydra_debug_param("HydraLan::init IP ", IPAddress(this->config.parts.ip));
+	hydra_debug_param("HydraLan::init PORT ", this->config.parts.port);
 	hydra_debug("HydraLan::init end");
 }
 
@@ -59,33 +57,14 @@ bool HydraLan::readPacket(HydraPacket* packet) {
 	return false;
 }
 
-HydraAddress HydraLan::getGateway(const HydraAddress destionation) {
-	HydraAddress gateway = destionation;
-	if (this->config.parts.addr.part.net == destionation.part.net) {
-		if (this->config.parts.addr.part.device == destionation.part.device) {
-			gateway.raw = HYDRA_ADDR_LOCAL;
-		}
-	} else {
-		gateway.raw = HYDRA_ADDR_NULL;
-	}
-	return gateway;
-}
-
-bool HydraLan::sendPacket(const HydraAddress to, const HydraPacket* packet, const bool set_from_addr) {
-	HydraPacket p;
-	memcpy(& p, packet, HYDRA_PACKET_SIZE);
-	if (set_from_addr) {
-		p.part.from_addr = this->getAddress();
-	}
+bool HydraLan::sendPacket(const HydraAddress to, const HydraPacket* packet) {
+	IPAddress to_ip = this->config.parts.ip;
+	to_ip[3] = to.part.device;
 	hydra_debug_param("HydraLan::sendPacket to ", to.raw);
-	hydra_debug_param("HydraLan::sendPacket ip ", this->gateway_ip);
-	hydra_debug_param("HydraLan::sendPacket packet to ", p.part.to_addr.raw);
-    this->udp.beginPacket(this->gateway_ip, this->config.parts.gateway_port);
-    this->udp.write(p.data, HYDRA_PACKET_SIZE);
+	hydra_debug_param("HydraLan::sendPacket ip ", to_ip);
+	hydra_debug_param("HydraLan::sendPacket packet to ", packet->part.to_addr.raw);
+    this->udp.beginPacket(to_ip, this->config.parts.port);
+    this->udp.write(packet->data, HYDRA_PACKET_SIZE);
     this->udp.endPacket();
 	return true;
-}
-
-HydraAddress HydraLan::getAddress() {
-	return this->config.parts.addr;
 }

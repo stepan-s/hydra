@@ -13,12 +13,12 @@ union NrfAddr {
 const char* HydraNrf::name = "NRF24";
 
 const HydraConfigValueDescriptionList HydraNrf::config_value_description_list = {
-	6, 24 + HYDRA_NRF_ROUTE_COUNT, (HydraConfigValueDescription[]) {
+	6, 24 + HYDRA_NET_ROUTE_COUNT * 2, (HydraConfigValueDescription[]) {
 		{2, "ADDR"},
+		{HYDRA_NET_ROUTE_COUNT * 2, "Routes"},
 		{3, "NET"},
 		{1, "Channel"},
 		{16, "EncryptKey"},
-		{HYDRA_NRF_ROUTE_COUNT, "RouteToNETS"},
 		{2, "RadioOpts"}
 	}
 };
@@ -64,8 +64,9 @@ void HydraNrf::init(Hydra* hydra) {
 
 	NrfAddr addr = {0};
 	NrfAddr bcaddr = {0};
-	memcpy(& addr, & this->config.parts.addr, 5);
-	memcpy(& bcaddr, & this->config.parts.addr, 5);
+	memcpy(& addr, & this->config.parts.addr, 2);
+	memcpy(& addr.a8[2], & this->config.parts.net, 3);
+	bcaddr = addr;
 	bcaddr.a8[0] = HYDRA_NRF_BC;
 
 	this->radio->openWritingPipe(bcaddr.a64);
@@ -133,36 +134,16 @@ bool HydraNrf::readPacket(HydraPacket* packet) {
 	return false;
 }
 
-HydraAddress HydraNrf::getGateway(const HydraAddress destionation) {
-	HydraAddress gateway = destionation;
-	if (this->config.parts.addr.part.net == destionation.part.net) {
-		if (this->config.parts.addr.part.device == destionation.part.device) {
-			gateway.raw = HYDRA_ADDR_LOCAL;
-		}
-	} else {
-		int i;
-		for(i = 0; i < HYDRA_NRF_ROUTE_COUNT; ++i) {
-			if ((this->config.parts.net_routes[i] != 0) && (this->config.parts.net_routes[i] == destionation.part.net)) {
-				return destionation;
-			}
-		}
-		gateway.raw = HYDRA_ADDR_NULL;
-	}
-	return gateway;
-}
-
-bool HydraNrf::sendPacket(const HydraAddress to, const HydraPacket* packet, const bool set_from_addr) {
+bool HydraNrf::sendPacket(const HydraAddress to, const HydraPacket* packet) {
 	hydra_debug_param("HydraNrf::sendPacket to ", to.raw);
 	hydra_debug_param("HydraNrf::sendPacket packet to ", packet->part.to_addr.raw);
 
 	HydraPacket p;
 	memcpy(& p, packet, HYDRA_PACKET_SIZE);
-	if (set_from_addr) {
-		p.part.from_addr = this->getAddress();
-	}
 
 	NrfAddr addr = {0};
-	memcpy(& addr, & this->config.parts.addr, 5);
+	memcpy(& addr, & this->config.parts.addr, 2);
+	memcpy(& addr.a8[2], & this->config.parts.net, 3);
 	addr.a8[0] = to.part.device;
 	hydra_debug_param("HydraNrf::sendPacket lo ", addr.a32[0]);
 	hydra_debug_param("HydraNrf::sendPacket hi ", addr.a32[1]);
@@ -182,8 +163,3 @@ bool HydraNrf::sendPacket(const HydraAddress to, const HydraPacket* packet, cons
 	hydra_debug_param("HydraNrf::sendPacket result ", result);
 	return result;
 }
-
-HydraAddress HydraNrf::getAddress() {
-	return this->config.parts.addr;
-}
-

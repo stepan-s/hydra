@@ -7,17 +7,16 @@
 #include "RF24.h"
 
 #define HYDRA_NRF_BC 0xFF
-#define HYDRA_NRF_ROUTE_COUNT 4
 
-struct HydraNrfConfig {
+struct HydraNrfConfig : HydraNetConfig {
 	union {
-		uint8_t raw[24 + HYDRA_NRF_ROUTE_COUNT];
+		uint8_t raw[24 + HYDRA_NET_ROUTE_COUNT * 2];
 		struct {
 			HydraAddress addr;
+			NydraNetRoute routes[HYDRA_NET_ROUTE_COUNT];
 			uint8_t net[3];
 			uint8_t channel;
 			uint8_t enc_key[16];
-			uint8_t net_routes[HYDRA_NRF_ROUTE_COUNT];
 			struct {
 				uint8_t retries_delay: 4;
 				uint8_t retries_count: 4;
@@ -46,9 +45,7 @@ public:
 	virtual void init(Hydra* hydra);
 	virtual bool isPacketAvailable();
 	virtual bool readPacket(HydraPacket* packet);
-	virtual HydraAddress getGateway(const HydraAddress destionation);
-	virtual bool sendPacket(const HydraAddress to, const HydraPacket* packet, const bool set_from_addr);
-	virtual HydraAddress getAddress();
+	virtual bool sendPacket(const HydraAddress to, const HydraPacket* packet);
 };
 
 #endif

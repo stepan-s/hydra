@@ -19,6 +19,10 @@
 #define HYDRA_DEVICE_BROADCAST 0xFF
 #define HYDRA_DEVICE_NULL 0x00
 
+#ifndef HYDRA_NET_ROUTE_COUNT
+	#define HYDRA_NET_ROUTE_COUNT 4
+#endif
+
 #define HYDRA_NET_SERVICE_ID 0
 #define HYDRA_SERVICE_ID_MIN 16
 #define HYDRA_PAYLOAD_TYPE_MIN 256
@@ -147,11 +151,35 @@ public:
 	//virtual ~HydraComponent();
 };
 
+struct NydraNetRoute {
+	uint8_t to_net;
+	uint8_t via_device;
+};
+
+struct HydraNetConfig {
+	union {
+		uint8_t raw[2 + HYDRA_NET_ROUTE_COUNT * 2];
+		struct {
+			HydraAddress addr;
+			NydraNetRoute routes[HYDRA_NET_ROUTE_COUNT];
+		} parts;
+	};
+};
+
 class HydraNetComponent: public HydraComponent {
+	/* Example
+	static const HydraConfigValueDescriptionList config_value_description_list;
+	*/
+	/* Example
+	HydraNetConfig config;
+	*/
 public:
+	virtual const HydraConfigValueDescriptionList* getConfigDescription();
+	virtual uint8_t* getConfig();
 	virtual bool writePacket(const HydraPacket* packet);
-	virtual HydraAddress getGateway(const HydraAddress destionation);
-	virtual bool sendPacket(const HydraAddress to, const HydraPacket* packet, const bool set_from_addr);
+	virtual HydraAddress getGateway(const HydraAddress destination);
+	virtual bool sendPacket(const HydraAddress to, const HydraPacket* packet);
+	virtual bool sendPacketFrom(const HydraAddress to, const HydraPacket* packet);
 	virtual HydraAddress getAddress();
 };
 

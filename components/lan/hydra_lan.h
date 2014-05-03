@@ -5,16 +5,15 @@
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 
-struct HydraLanConfig {
+struct HydraLanConfig : HydraNetConfig {
 	union {
-		uint8_t raw[20];
+		uint8_t raw[14 + HYDRA_NET_ROUTE_COUNT * 2];
 		struct {
 			HydraAddress addr;
+			NydraNetRoute routes[HYDRA_NET_ROUTE_COUNT];
 			uint8_t mac[6];
-			uint8_t local_ip[4];
-			uint16_t local_port;
-			uint8_t gateway_ip[4];
-			uint16_t gateway_port;
+			uint8_t ip[4];
+			uint16_t port;
 		} parts;
 	};
 };
@@ -24,7 +23,6 @@ class HydraLan: public HydraNetComponent {
 	static const HydraConfigValueDescriptionList config_value_description_list;
 	HydraLanConfig config;
 	EthernetUDP udp;
-	IPAddress gateway_ip;
 
 public:
 	HydraLan();
@@ -34,9 +32,7 @@ public:
 	virtual void init(Hydra* hydra);
 	virtual bool isPacketAvailable();
 	virtual bool readPacket(HydraPacket* packet);
-	virtual HydraAddress getGateway(const HydraAddress destionation);
-	virtual bool sendPacket(const HydraAddress to, const HydraPacket* packet, const bool set_from_addr);
-	virtual HydraAddress getAddress();
+	virtual bool sendPacket(const HydraAddress to, const HydraPacket* packet);
 };
 
 #endif
