@@ -395,8 +395,14 @@ void Hydra::init() {
 
 	hydra_fprintln("INIT");
 	int i;
+	uint8_t service_id = HYDRA_SERVICE_ID_MIN;
 	for(i = 0; i < this->components->totalCount; ++i) {
 		hydra_debug_param("Hydra::init component ", i);
+		if (i >= this->components->netifCount) {
+			if (this->components->list[i].id == HYDRA_SERVICE_ID_AUTO) {
+				this->components->list[i].id = service_id++;
+			}
+		}
 		this->components->list[i].component->init(this);
 	}
 	this->master_online_timeout.begin(0);
