@@ -10,9 +10,12 @@ const char* HydraCore::getName() {
 
 HydraCore::HydraCore() {
 	this->online = false;
+	this->reply_to = (HydraAddressPort){HYDRA_ADDR_NULL, 0};
+	this->reply_timeout.begin(0);
 }
 
 bool HydraCore::isPacketAvailable() {
+	this->reply_timeout.tick();
 	bool online = this->hydra->isMasterOnline();
 	if (online != this->online) {
 		if (online) {
@@ -21,6 +24,9 @@ bool HydraCore::isPacketAvailable() {
 			hydra_fprintln("OFFLINE");
 		}
 		this->online = online;
+	}
+	if (!hydra_is_addr_null(this->reply_to.addr) and this->reply_timeout.isEnd()) {
+		return true;
 	}
 	return false;
 }
@@ -44,8 +50,28 @@ bool HydraCore::writePacket(const HydraPacket* packet) {
 		wdt_enable(WDTO_15MS);  // Set the Watchdog to 15ms
 		while(1);               // Enter an infinite loop
 		break;
+	case HYDRA_CORE_PAYLOAD_TYPE_ENUM_REQUEST:
+		if ((packet->part.to_addr.part.device & packet->part.payload.data[1]) == packet->part.payload.data[0]) {
+			this->reply_to.addr = packet->part.from_addr;
+			this->reply_to.service = packet->part.from_service;
+			//delay depend device number
+			this->reply_timeout.begin(packet->part.to_addr.part.device * HYDRA_CORE_ENUM_DELAY_MS);
+		}
+		break;
 	default:
 		return false;
 	}
 	return true;
+}
+
+bool HydraCore::readPacket(HydraPacket* packet) {
+	if (!hydra_is_addr_null(this->reply_to.addr)) {
+		packet->part.to_addr = this->reply_to.addr;
+		packet->part.to_service = this->reply_to.service;
+		packet->part.payload.type = HYDRA_CORE_PAYLOAD_TYPE_ENUM_REPLY;
+		this->reply_to.addr = (HydraAddress){HYDRA_ADDR_NULL};
+		return true;
+	} else {
+		return false;
+	}
 }
