@@ -25,6 +25,7 @@
 
 class HydraConfig: public HydraComponent {
 	static const char* name;
+	HydraAddressPort reply_to;
 	uint8_t reply_type;
 	uint8_t service_index;
 	uint8_t value_index;

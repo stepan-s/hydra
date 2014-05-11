@@ -25,7 +25,7 @@ bool HydraCore::isPacketAvailable() {
 		}
 		this->online = online;
 	}
-	if (!hydra_is_addr_null(this->reply_to.addr) and this->reply_timeout.isEnd()) {
+	if (!hydra_is_addr_null(this->reply_to.addr) && this->reply_timeout.isEnd()) {
 		return true;
 	}
 	return false;

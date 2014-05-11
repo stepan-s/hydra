@@ -48,11 +48,13 @@ bool HydraConfig::writePacket(const HydraPacket* packet) {
 		this->reply_type = 0;
 		return false;
 	}
+	this->reply_to.addr = packet->part.from_addr;
+	this->reply_to.service = packet->part.from_service;
 	return true;
 }
 
 bool HydraConfig::isPacketAvailable() {
-	return this->reply_type;
+	return this->reply_type != 0;
 }
 
 bool HydraConfig::readPacket(HydraPacket* packet) {
@@ -62,6 +64,7 @@ bool HydraConfig::readPacket(HydraPacket* packet) {
 	case HYDRA_CONFIG_PAYLOAD_TYPE_REPLY_SERVICE_COUNT:
 		packet->part.payload.data[0] = components->netifCount;
 		packet->part.payload.data[1] = components->serviceCount;
+		result = true;
 		break;
 	case HYDRA_CONFIG_PAYLOAD_TYPE_REPLY_SERVICE_ID:
 		if (this->service_index < components->totalCount) {
@@ -127,9 +130,14 @@ bool HydraConfig::readPacket(HydraPacket* packet) {
 		result = true;
 		break;
 	default:
-		return false;
+		break;
 	}
-	packet->part.payload.type = this->reply_type;
+	if (result) {
+		packet->part.payload.type = this->reply_type;
+		packet->part.to_addr = this->reply_to.addr;
+		packet->part.to_service = this->reply_to.service;
+	}
+	this->reply_type = 0;
 	return result;
 }
 

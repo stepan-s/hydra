@@ -49,7 +49,7 @@ bool HydraEcho::writePacket(const HydraPacket* packet) {
 		if ((this->config.parts.addr.raw != HYDRA_ADDR_NULL) && (this->config.parts.addr.raw == packet->part.from_addr.raw)) {
 			hydra_fprint("Pong rx ");
 			hydra_hprint(packet->part.from_addr.raw);
-			if ((*(uint32_t *)packet->part.payload.data == this->sent) and !(this->graph & 1)) {
+			if ((*(uint32_t *)packet->part.payload.data == this->sent) && !(this->graph & 1)) {
 				--this->lost;
 				this->graph |= 1;
 				hydra_print(' ');
