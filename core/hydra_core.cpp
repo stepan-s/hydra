@@ -1,6 +1,7 @@
 #include "hydra_core.h"
 #include <Arduino.h>
 #include <avr/wdt.h>
+#include "crc32.h"
 
 const char* HydraCore::name = "Core";
 
@@ -70,6 +71,42 @@ bool HydraCore::readPacket(HydraPacket* packet) {
 		packet->part.to_service = this->reply_to.service;
 		packet->part.payload.type = HYDRA_CORE_PAYLOAD_TYPE_ENUM_REPLY;
 		this->reply_to.addr = (HydraAddress){HYDRA_ADDR_NULL};
+
+		Crc32 hard = Crc32();
+		Crc32 soft = Crc32();
+
+		HydraComponentDescriptionList* components = this->hydra->components;
+		hard.update(components->netifCount);
+		hard.update(components->serviceCount);
+
+		uint8_t i;
+		for(i = 0; i < components->totalCount; ++i) {
+			const HydraComponentDescription* item = & components->list[i];
+
+			hard.update(i);
+			hard.update((char *) item->component->getName());
+			if (i >= components->netifCount) {
+				hard.update(item->id);
+			}
+
+			const HydraConfigValueDescriptionList* config_description = item->component->getConfigDescription();
+			if (config_description) {
+				hard.update(config_description->count);
+				uint8_t j;
+				for(j = 0; j < config_description->count; ++j) {
+					hard.update(j);
+					hard.update((char *) config_description->list[j].caption);
+				}
+
+				if (config_description && config_description->size) {
+					soft.update(item->component->getConfig(), config_description->size);
+				}
+			}
+		}
+
+		((uint32_t *)packet->part.payload.data)[0] = hard.get();
+		((uint32_t *)packet->part.payload.data)[1] = soft.get();
+
 		return true;
 	} else {
 		return false;
