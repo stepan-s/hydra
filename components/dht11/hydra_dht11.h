@@ -12,8 +12,6 @@ struct HydraDht11Config {};
 
 class HydraDht11: public HydraComponent {
 	static const char* name;
-	static const HydraConfigValueDescriptionList config_value_description_list;
-	HydraDht11Config config;
 	uint8_t pin;
 	bool reply_ready;
 	HydraAddress reply_to_address;
@@ -23,8 +21,6 @@ class HydraDht11: public HydraComponent {
 public:
 	HydraDht11(uint8_t pin);
 	virtual const char* getName();
-	virtual const HydraConfigValueDescriptionList* getConfigDescription();
-	virtual uint8_t* getConfig();
 	virtual void init(Hydra* hydra);
 	virtual bool writePacket(const HydraPacket* packet);
 	virtual bool isPacketAvailable();

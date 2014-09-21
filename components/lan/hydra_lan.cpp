@@ -4,11 +4,11 @@ const char* HydraLan::name = "LAN";
 
 const HydraConfigValueDescriptionList HydraLan::config_value_description_list = {
 	5, 14 + HYDRA_NET_ROUTE_COUNT * 2, (HydraConfigValueDescription[]) {
-		{2, "ADDR"},
-		{HYDRA_NET_ROUTE_COUNT * 2, "Routes"},
-		{6, "MAC"},
-		{4, "IP"},
-		{2, "PORT"}
+		{HYDRA_CONFIG_VALUE_TYPE_ADDR, 2, "ADDR"},
+		{HYDRA_CONFIG_VALUE_TYPE_NET_ROUTE, HYDRA_NET_ROUTE_COUNT * 2, "Routes"},
+		{HYDRA_CONFIG_VALUE_TYPE_MAC, 6, "MAC"},
+		{HYDRA_CONFIG_VALUE_TYPE_IP, 4, "IP"},
+		{HYDRA_CONFIG_VALUE_TYPE_INT, 2, "PORT"}
 	}
 };
 

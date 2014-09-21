@@ -14,12 +14,12 @@ const char* HydraNrf::name = "NRF24";
 
 const HydraConfigValueDescriptionList HydraNrf::config_value_description_list = {
 	6, 24 + HYDRA_NET_ROUTE_COUNT * 2, (HydraConfigValueDescription[]) {
-		{2, "ADDR"},
-		{HYDRA_NET_ROUTE_COUNT * 2, "Routes"},
-		{3, "NET"},
-		{1, "Channel"},
-		{16, "EncryptKey"},
-		{2, "RadioOpts"}
+		{HYDRA_CONFIG_VALUE_TYPE_ADDR, 2, "ADDR"},
+		{HYDRA_CONFIG_VALUE_TYPE_NET_ROUTE, HYDRA_NET_ROUTE_COUNT * 2, "Routes"},
+		{HYDRA_CONFIG_VALUE_TYPE_BINARY, 3, "NET"},
+		{HYDRA_CONFIG_VALUE_TYPE_INT, 1, "Channel"},
+		{HYDRA_CONFIG_VALUE_TYPE_BINARY, 16, "EncryptKey"},
+		{HYDRA_CONFIG_VALUE_TYPE_SET, 2, "RadioOpts"}
 	}
 };
 

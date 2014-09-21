@@ -3,10 +3,6 @@
 
 const char* HydraDht11::name = "Dht11";
 
-const HydraConfigValueDescriptionList HydraDht11::config_value_description_list = {
-	0, 0, 0
-};
-
 HydraDht11::HydraDht11(uint8_t pin) {
 	this->reply_ready = false;
 	this->pin = pin;
@@ -14,14 +10,6 @@ HydraDht11::HydraDht11(uint8_t pin) {
 
 const char* HydraDht11::getName() {
 	return HydraDht11::name;
-}
-
-const HydraConfigValueDescriptionList* HydraDht11::getConfigDescription() {
-	return & config_value_description_list;
-}
-
-uint8_t* HydraDht11::getConfig() {
-	return 0;
 }
 
 void HydraDht11::init(Hydra* hydra) {

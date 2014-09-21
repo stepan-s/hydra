@@ -95,6 +95,8 @@ bool HydraCore::readPacket(HydraPacket* packet) {
 				uint8_t j;
 				for(j = 0; j < config_description->count; ++j) {
 					hard.update(j);
+					hard.update(config_description->list[j].type);
+					hard.update(config_description->list[j].size);
 					hard.update((char *) config_description->list[j].caption);
 				}
 

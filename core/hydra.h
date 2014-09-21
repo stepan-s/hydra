@@ -106,7 +106,25 @@ struct HydraPacket {
 	};
 };
 
+//Primitive types
+#define HYDRA_CONFIG_VALUE_TYPE_BINARY			0 //raw binary, any data
+#define HYDRA_CONFIG_VALUE_TYPE_SET				1 //bits, count = 8 * value size
+#define HYDRA_CONFIG_VALUE_TYPE_INT				2 //size of integer = value size
+#define HYDRA_CONFIG_VALUE_TYPE_FLOAT			3 //size of float = value size
+#define HYDRA_CONFIG_VALUE_TYPE_CHAR			4 //char array size = value size
+//Hydra network related types
+#define HYDRA_CONFIG_VALUE_TYPE_ADDR			16 //Hydra address, 2 byte each
+#define HYDRA_CONFIG_VALUE_TYPE_SERVICE			17 //Hydra service, 1 byte each
+#define HYDRA_CONFIG_VALUE_TYPE_ADDR_SERVICE	18 //Hydra address and service, 3 byte each
+#define HYDRA_CONFIG_VALUE_TYPE_NET_ROUTE		19 //Hydra net address pair (to net, by device), 2 byte each
+//Known types
+#define HYDRA_CONFIG_VALUE_TYPE_IP				32 //4 byte each
+#define HYDRA_CONFIG_VALUE_TYPE_MAC				33 //6 byte each
+//Custom types
+#define HYDRA_CONFIG_VALUE_TYPE_CUSTOM_BASE		128 //any custom types start from this
+
 struct HydraConfigValueDescription {
+	const uint8_t type;
 	const uint8_t size;
 	const char* caption;
 };

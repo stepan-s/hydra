@@ -5,7 +5,7 @@ const char* HydraBlindsDc::name = "Blinds";
 
 const HydraConfigValueDescriptionList HydraBlindsDc::config_value_description_list = {
 	1, 1, (HydraConfigValueDescription[]) {
-		{1, "Threshold"},
+		{HYDRA_CONFIG_VALUE_TYPE_INT, 1, "Threshold"},
 	}
 };
 

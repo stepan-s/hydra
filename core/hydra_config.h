@@ -29,6 +29,8 @@ class HydraConfig: public HydraComponent {
 	uint8_t reply_type;
 	uint8_t service_index;
 	uint8_t value_index;
+	uint8_t request_offset;
+	uint8_t request_size;
 	virtual bool getConfigValuePointer(const uint8_t service_index, const uint8_t value_index, uint8_t** out_pointer, uint8_t* out_size);
 
 public:

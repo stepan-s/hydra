@@ -6,8 +6,8 @@ const char* HydraSwitch::name = "Switch";
 
 const HydraConfigValueDescriptionList HydraSwitch::config_value_description_list = {
 	2, 6, (HydraConfigValueDescription[]) {
-		{3, "CtrlServ"},
-		{3, "DrctServ"},
+		{HYDRA_CONFIG_VALUE_TYPE_ADDR_SERVICE, 3, "CtrlServ"},
+		{HYDRA_CONFIG_VALUE_TYPE_ADDR_SERVICE, 3, "DrctServ"},
 	}
 };
 

@@ -25,19 +25,32 @@ bool HydraConfig::writePacket(const HydraPacket* packet) {
 	case HYDRA_CONFIG_PAYLOAD_TYPE_REQUEST_SERVICE_NAME:
 	case HYDRA_CONFIG_PAYLOAD_TYPE_REQUEST_SERVICE_CONFIG_COUNT:
 	case HYDRA_CONFIG_PAYLOAD_TYPE_REQUEST_SERVICE_CONFIG_NAME:
-	case HYDRA_CONFIG_PAYLOAD_TYPE_REQUEST_SERVICE_CONFIG_GET_VALUE:
 		break;
+	case HYDRA_CONFIG_PAYLOAD_TYPE_REQUEST_SERVICE_CONFIG_GET_VALUE:
 	case HYDRA_CONFIG_PAYLOAD_TYPE_REQUEST_SERVICE_CONFIG_SET_VALUE:
+		this->request_offset = packet->part.payload.data[2];
+		this->request_size = packet->part.payload.data[3];
+		if (packet->part.payload.type == HYDRA_CONFIG_PAYLOAD_TYPE_REQUEST_SERVICE_CONFIG_GET_VALUE) {
+			break;
+		}
 		uint8_t* data;
 		uint8_t size;
 		if (this->getConfigValuePointer(this->service_index, this->value_index, & data, & size)) {
-			memcpy(
-				data,
-				& packet->part.payload.data[3],
-				min(size, HYDRA_PACKET_PAYLOAD_DATA_SIZE - 4)
-			);
+			uint8_t offset = min(this->request_offset, size);
+			size = min(size, size - offset);
+			if (size) {
+				size = min(size, this->request_size);
+				size = min(size, HYDRA_PACKET_PAYLOAD_DATA_SIZE - 4);
+				memcpy(
+					data + offset,
+					& packet->part.payload.data[4],
+					size
+				);
+				break;
+			}
 		}
-		break;
+		this->reply_type = 0;
+		return false;
 	case HYDRA_CONFIG_PAYLOAD_TYPE_REQUEST_CONFIG_READ:
 		this->hydra->loadConfig();
 		break;
@@ -100,8 +113,10 @@ bool HydraConfig::readPacket(HydraPacket* packet) {
 			if (config_value_description_list && (this->value_index < config_value_description_list->count)) {
 				packet->part.payload.data[0] = this->service_index;
 				packet->part.payload.data[1] = this->value_index;
+				packet->part.payload.data[2] = config_value_description_list->list[this->value_index].type;
+				packet->part.payload.data[3] = config_value_description_list->list[this->value_index].size;
 				const char *caption = config_value_description_list->list[this->value_index].caption;
-				memcpy(& packet->part.payload.data[2], caption, min(strlen(caption), HYDRA_PACKET_PAYLOAD_DATA_SIZE - 3));
+				memcpy(& packet->part.payload.data[4], caption, min(strlen(caption), HYDRA_PACKET_PAYLOAD_DATA_SIZE - 5));
 				packet->part.payload.data[HYDRA_PACKET_PAYLOAD_DATA_SIZE - 1] = 0;
 				result = true;
 			}
@@ -112,15 +127,22 @@ bool HydraConfig::readPacket(HydraPacket* packet) {
 		uint8_t* data;
 		uint8_t size;
 		if (this->getConfigValuePointer(this->service_index, this->value_index, & data, & size)) {
-			packet->part.payload.data[0] = this->service_index;
-			packet->part.payload.data[1] = this->value_index;
-			packet->part.payload.data[2] = size;
-			memcpy(
-				& packet->part.payload.data[3],
-				data,
-				min(size, HYDRA_PACKET_PAYLOAD_DATA_SIZE - 3)
-			);
-			result = true;
+			uint8_t offset = min(this->request_offset, size);
+			size = min(size, size - offset);
+			if (size) {
+				size = min(size, this->request_size);
+				size = min(size, HYDRA_PACKET_PAYLOAD_DATA_SIZE - 4);
+				packet->part.payload.data[0] = this->service_index;
+				packet->part.payload.data[1] = this->value_index;
+				packet->part.payload.data[2] = offset;
+				packet->part.payload.data[3] = size;
+				memcpy(
+					& packet->part.payload.data[4],
+					data + offset,
+					size
+				);
+				result = true;
+			}
 		}
 		break;
 	case HYDRA_CONFIG_PAYLOAD_TYPE_REPLY_CONFIG_READ:
