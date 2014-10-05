@@ -1,5 +1,6 @@
 #include "hydra_config.h"
 #include <Arduino.h>
+#include "hardware.h"
 
 const char* HydraConfig::name = "Conf";
 
@@ -77,6 +78,8 @@ bool HydraConfig::readPacket(HydraPacket* packet) {
 	case HYDRA_CONFIG_PAYLOAD_TYPE_REPLY_SERVICE_COUNT:
 		packet->part.payload.data[0] = components->netifCount;
 		packet->part.payload.data[1] = components->serviceCount;
+		*((uint16_t *)(packet->part.payload.data + 2)) = HARDWARE_ID;
+		*((uint16_t *)(packet->part.payload.data + 4)) = HARDWARE_FREQ_MHZ;
 		result = true;
 		break;
 	case HYDRA_CONFIG_PAYLOAD_TYPE_REPLY_SERVICE_ID:

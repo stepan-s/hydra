@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <avr/wdt.h>
 #include "crc32.h"
+#include "hardware.h"
 
 const char* HydraCore::name = "Core";
 
@@ -74,6 +75,8 @@ bool HydraCore::readPacket(HydraPacket* packet) {
 
 		Crc32 hard = Crc32();
 		Crc32 soft = Crc32();
+		hard.update(HARDWARE_FREQ);
+		hard.update(HARDWARE_ID);
 
 		HydraComponentDescriptionList* components = this->hydra->components;
 		hard.update(components->netifCount);

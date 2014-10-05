@@ -20,10 +20,22 @@ void Crc32::update(const uint8_t data) {
     crc = pgm_read_dword_near(crc_table + (tbl_idx & 0x0f)) ^ (crc >> 4);
 }
 
+void Crc32::update(const uint16_t data) {
+	update((uint8_t *)&data, 2);
+}
+
+void Crc32::update(const uint32_t data) {
+	update((uint8_t *)&data, 4);
+}
+
+void Crc32::update(const uint64_t data) {
+	update((uint8_t *)&data, 8);
+}
+
 void Crc32::update(const char *s) {
 	if (s) {
 		while (*s) {
-			update(*s++);
+			update((uint8_t)*s++);
 		}
 	}
 }
