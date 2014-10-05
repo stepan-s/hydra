@@ -5,7 +5,7 @@
 const char* HydraWatch::name = "Watch";
 
 const HydraConfigValueDescriptionList HydraWatch::config_value_description_list = {
-	2, 3, (HydraConfigValueDescription[]) {
+	1, 3, (HydraConfigValueDescription[]) {
 		{HYDRA_CONFIG_VALUE_TYPE_ADDR_SERVICE, 3, "MasterServ"},
 	}
 };
