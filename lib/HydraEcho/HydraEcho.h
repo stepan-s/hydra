@@ -10,36 +10,36 @@
 #include "Hydra.h"
 
 struct HydraEchoConfig {
-	union {
-		uint8_t raw[2];
-		struct {
-			HydraAddress addr;
-		} parts;
-	};
+    union {
+        uint8_t raw[2];
+        struct {
+            HydraAddress addr;
+        } parts;
+    };
 };
 
 class HydraEcho: public HydraComponent {
-	static const char* name;
-	static const HydraConfigValueDescriptionList config_value_description_list;
-	HydraEchoConfig config;
-	bool reply_ready;
-	HydraAddress reply_to_address;
-	uint16_t reply_to_service;
-	uint8_t reply_payload[HYDRA_PACKET_PAYLOAD_DATA_SIZE];
-	HydraTimeout ping_timeout;
-	uint32_t lost;
-	uint32_t sent;
-	uint64_t graph;
+    static const char* name;
+    static const HydraConfigValueDescriptionList config_value_description_list;
+    HydraEchoConfig config;
+    bool reply_ready;
+    HydraAddress reply_to_address;
+    uint16_t reply_to_service;
+    uint8_t reply_payload[HYDRA_PACKET_PAYLOAD_DATA_SIZE];
+    HydraTimeout ping_timeout;
+    uint32_t lost;
+    uint32_t sent;
+    uint64_t graph;
 
 public:
-	HydraEcho();
-	virtual const char* getName();
-	virtual const HydraConfigValueDescriptionList* getConfigDescription();
-	virtual uint8_t* getConfig();
-	virtual void init(Hydra* hydra);
-	virtual bool writePacket(const HydraPacket* packet);
-	virtual bool isPacketAvailable();
-	virtual bool readPacket(HydraPacket* packet);
+    HydraEcho();
+    virtual const char* getName();
+    virtual const HydraConfigValueDescriptionList* getConfigDescription();
+    virtual uint8_t* getConfig();
+    virtual void init(Hydra* hydra);
+    virtual bool writePacket(const HydraPacket* packet);
+    virtual bool isPacketAvailable();
+    virtual bool readPacket(HydraPacket* packet);
 };
 
 #endif

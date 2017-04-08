@@ -24,21 +24,21 @@
 #define HYDRA_CONFIG_PAYLOAD_TYPE_REPLY_CONFIG_WRITE 18
 
 class HydraConfig: public HydraComponent {
-	static const char* name;
-	HydraAddressPort reply_to;
-	uint8_t reply_type;
-	uint8_t service_index;
-	uint8_t value_index;
-	uint8_t request_offset;
-	uint8_t request_size;
-	virtual bool getConfigValuePointer(const uint8_t service_index, const uint8_t value_index, uint8_t** out_pointer, uint8_t* out_size);
+    static const char* name;
+    HydraAddressPort reply_to;
+    uint8_t reply_type;
+    uint8_t service_index;
+    uint8_t value_index;
+    uint8_t request_offset;
+    uint8_t request_size;
+    virtual bool getConfigValuePointer(const uint8_t service_index, const uint8_t value_index, uint8_t** out_pointer, uint8_t* out_size);
 
 public:
-	virtual const char* getName();
-	virtual void init(Hydra* hydra);
-	virtual bool writePacket(const HydraPacket* packet);
-	virtual bool isPacketAvailable();
-	virtual bool readPacket(HydraPacket* packet);
+    virtual const char* getName();
+    virtual void init(Hydra* hydra);
+    virtual bool writePacket(const HydraPacket* packet);
+    virtual bool isPacketAvailable();
+    virtual bool readPacket(HydraPacket* packet);
 };
 
 #endif

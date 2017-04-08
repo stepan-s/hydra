@@ -12,17 +12,17 @@
 #include "Hydra.h"
 
 class HydraCore: public HydraComponent {
-	static const char* name;
-	bool online;
-	HydraAddressPort reply_to;
-	HydraTimeout reply_timeout;
+    static const char* name;
+    bool online;
+    HydraAddressPort reply_to;
+    HydraTimeout reply_timeout;
 
 public:
-	HydraCore();
-	virtual const char* getName();
-	virtual bool isPacketAvailable();
-	virtual bool writePacket(const HydraPacket* packet);
-	virtual bool readPacket(HydraPacket* packet);
+    HydraCore();
+    virtual const char* getName();
+    virtual bool isPacketAvailable();
+    virtual bool writePacket(const HydraPacket* packet);
+    virtual bool readPacket(HydraPacket* packet);
 };
 
 #endif
