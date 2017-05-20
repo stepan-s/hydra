@@ -10,7 +10,7 @@
 #define HYDRA_SWITCH_STATE_OFF 0
 #define HYDRA_SWITCH_STATE_ON 1
 
-#include "Hydra.h"
+#include <Hydra.h>
 
 struct HydraSwitchConfig {
     union {

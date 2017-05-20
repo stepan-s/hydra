@@ -1,6 +1,4 @@
 #include "HydraConfig.h"
-#include <Arduino.h>
-#include "hardware.h"
 
 const char* HydraConfig::name = "Conf";
 

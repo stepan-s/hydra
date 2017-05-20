@@ -5,7 +5,7 @@
 #define HYDRA_WATCH_PAYLOAD_TYPE_BRIGHT            HYDRA_WATCH_PAYLOAD(3)
 #define HYDRA_WATCH_PAYLOAD_TYPE_DISPLAY        HYDRA_WATCH_PAYLOAD(4)
 
-#include "Hydra.h"
+#include <Hydra.h>
 
 struct HydraWatchConfig {
     union {

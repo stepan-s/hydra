@@ -1,5 +1,4 @@
 #include "HydraEcho.h"
-#include <Arduino.h>
 
 const char* HydraEcho::name = "Echo";
 

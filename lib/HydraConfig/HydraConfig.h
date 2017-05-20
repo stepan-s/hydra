@@ -1,7 +1,7 @@
 #ifndef _HYDRA_CONFIG_
 #define _HYDRA_CONFIG_ true
 
-#include "Hydra.h"
+#include <Hydra.h>
 
 #define HYDRA_CONFIG_SERVICE_ID 3
 #define HYDRA_CONFIG_PAYLOAD_TYPE_REQUEST_SERVICE_COUNT 1

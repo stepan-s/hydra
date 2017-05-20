@@ -1,5 +1,4 @@
 #include "HydraBlinds.h"
-#include <Arduino.h>
 
 const char* HydraBlinds::name = "Blinds";
 

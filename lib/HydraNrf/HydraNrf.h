@@ -1,7 +1,7 @@
 #ifndef _HYDRA_NRF_
 #define _HYDRA_NRF_ true
 
-#include "Hydra.h"
+#include <Hydra.h>
 #include <RF24.h>
 #include <AES.h>
 

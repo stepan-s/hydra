@@ -1,6 +1,5 @@
 #include "HydraNrf.h"
-#include "HydraCore.h"
-//#include <SPI.h>
+#include <HydraCore.h>
 
 static const uint8_t _enc_iv[16] = {'H', 'Y', 'D', 'R', 'A', ' ', 'N', 'F', 'R', ' ', 'A', 'E', 'S', ' ', 'I', 'V'};
 

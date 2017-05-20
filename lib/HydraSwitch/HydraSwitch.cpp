@@ -1,6 +1,5 @@
 #include "HydraSwitch.h"
-#include "HydraRelay.h"
-#include <Arduino.h>
+#include <HydraRelay.h>
 
 const char* HydraSwitch::name = "Switch";
 

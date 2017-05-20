@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <WString.h>
+#include "hardware.h"
 
 #define HYDRA_PACKET_SIZE 32
 #define HYDRA_PACKET_PAYLOAD_DATA_SIZE 20

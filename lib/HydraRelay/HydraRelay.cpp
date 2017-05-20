@@ -1,5 +1,4 @@
 #include "HydraRelay.h"
-#include <Arduino.h>
 
 const char* HydraRelay::name = "Relay";
 

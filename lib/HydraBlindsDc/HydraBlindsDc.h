@@ -11,7 +11,7 @@
 #define HYDRA_BLINDS_DC_MOTOR_STATE_ROTATE_CCW 2
 #define HYDRA_BLINDS_DC_MOTOR_STATE_DISABLED 3
 
-#include "Hydra.h"
+#include <Hydra.h>
 
 struct HydraBlindsDcConfig {
     union {

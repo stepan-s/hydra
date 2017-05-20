@@ -1,5 +1,4 @@
 #include "HydraDht11.h"
-#include <Arduino.h>
 
 const char* HydraDht11::name = "Dht11";
 

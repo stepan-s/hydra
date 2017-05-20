@@ -1,8 +1,6 @@
 #include "HydraCore.h"
-#include <Arduino.h>
 #include <avr/wdt.h>
-#include "crc32.h"
-#include "hardware.h"
+#include <crc32.h>
 
 const char* HydraCore::name = "Core";
 

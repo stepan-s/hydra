@@ -10,7 +10,7 @@
 #define HYDRA_BLINDS_MOTOR_STATE_ROTATE_CW 1
 #define HYDRA_BLINDS_MOTOR_STATE_ROTATE_CCW 2
 
-#include "Hydra.h"
+#include <Hydra.h>
 #include <AccelStepper.h>
 
 struct HydraBlindsConfig {

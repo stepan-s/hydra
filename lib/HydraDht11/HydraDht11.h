@@ -5,7 +5,7 @@
 #define HYDRA_DHT11_PAYLOAD_TYPE_REQUEST        HYDRA_DHT11_PAYLOAD(0)
 #define HYDRA_DHT11_PAYLOAD_TYPE_REPLY            HYDRA_DHT11_PAYLOAD(1)
 
-#include "Hydra.h"
+#include <Hydra.h>
 #include <dht11.h>
 
 struct HydraDht11Config {};

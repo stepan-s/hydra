@@ -1,7 +1,7 @@
 #ifndef _HYDRA_LAN_
 #define _HYDRA_LAN_ true
 
-#include "Hydra.h"
+#include <Hydra.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 

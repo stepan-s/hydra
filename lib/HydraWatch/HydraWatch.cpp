@@ -1,6 +1,5 @@
 #include "HydraWatch.h"
 #include "lcd.h"
-#include <Arduino.h>
 
 const char* HydraWatch::name = "Watch";
 

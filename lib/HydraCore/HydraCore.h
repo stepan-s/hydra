@@ -9,7 +9,7 @@
 
 #define HYDRA_CORE_ENUM_DELAY_MS 20
 
-#include "Hydra.h"
+#include <Hydra.h>
 
 class HydraCore: public HydraComponent {
     static const char* name;

@@ -1,5 +1,4 @@
 #include "Hydra.h"
-#include <Arduino.h>
 #include <EEPROM.h>
 
 // HydraComponent

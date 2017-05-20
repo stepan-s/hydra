@@ -7,7 +7,7 @@
 
 #define HYDRA_ECHO_PING_TIMEOUT 1000
 
-#include "Hydra.h"
+#include <Hydra.h>
 
 struct HydraEchoConfig {
     union {
