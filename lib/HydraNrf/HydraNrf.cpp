@@ -62,10 +62,9 @@ void HydraNrf::init(Hydra* hydra) {
     hydra_debug_param("Tmo", this->radio->getMaxTimeout());
 
     NrfAddr addr = {0};
-    NrfAddr bcaddr = {0};
     memcpy(& addr, & this->config.parts.addr, 2);
     memcpy(& addr.a8[2], & this->config.parts.net, 3);
-    bcaddr = addr;
+    NrfAddr bcaddr = addr;
     bcaddr.a8[0] = HYDRA_NRF_BC;
 
     this->radio->openWritingPipe(bcaddr.a64);
