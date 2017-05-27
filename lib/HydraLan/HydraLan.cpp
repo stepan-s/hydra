@@ -38,7 +38,7 @@ void HydraLan::init(Hydra* hydra) {
 }
 
 bool HydraLan::isPacketAvailable() {
-    return this->udp.parsePacket();
+    return this->udp.parsePacket() != 0;
 }
 
 bool HydraLan::readPacket(HydraPacket* packet) {
@@ -48,7 +48,7 @@ bool HydraLan::readPacket(HydraPacket* packet) {
         hydra_debug_param("HydraLan::readPacket received from ", this->udp.remoteIP());
         hydra_debug_param("HydraLan::readPacket received size ", packetSize);
         if (HYDRA_PACKET_SIZE == packetSize) {
-            int readed = this->udp.read(packet->data, HYDRA_PACKET_SIZE);
+            int readed = this->udp.read((unsigned char *) packet->data, HYDRA_PACKET_SIZE);
             hydra_debug_param("HydraLan::readPacket read ", readed);
             hydra_debug_param("HydraLan::readPacket time ", packet->part.timestamp);
             return readed == HYDRA_PACKET_SIZE;

@@ -10,7 +10,7 @@ const char* HydraCore::getName() {
 
 HydraCore::HydraCore() {
     this->online = false;
-    this->reply_to = (HydraAddressPort){HYDRA_ADDR_NULL, 0};
+    this->reply_to = (HydraAddressPort){{HYDRA_ADDR_NULL}, 0};
     this->reply_timeout.begin(0);
 }
 
@@ -107,8 +107,8 @@ bool HydraCore::readPacket(HydraPacket* packet) {
             }
         }
 
-        ((uint32_t *)packet->part.payload.data)[0] = hard.get();
-        ((uint32_t *)packet->part.payload.data)[1] = soft.get();
+        ((uint32_t *)packet->part.payload.data)[0] = (uint32_t) hard.get();
+        ((uint32_t *)packet->part.payload.data)[1] = (uint32_t) soft.get();
 
         return true;
     } else {

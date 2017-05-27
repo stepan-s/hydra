@@ -152,7 +152,7 @@ void lcd_render_symbol(int pos, int symbol) {
             uint8_t pix_map = lcd_pixel_map[pos][font_col][font_row];
             uint8_t buffer_index = (pix_map & 0b11111000) >> 3;
             uint8_t buffer_shift = (pix_map & 0b00000111);
-            uint8_t buffer_value = 1 << buffer_shift;
+            uint8_t buffer_value = (uint8_t) 1 << buffer_shift;
             if (pix_col & 0x80) {
                 ((uint8_t *) lcd_bitmap)[buffer_index] |= buffer_value;
             } else {
@@ -167,7 +167,7 @@ void lcd_render_pixel(int pixel, bool active) {
     uint8_t pix_map = lcd_pixel_map_2[pixel];
     uint8_t buffer_index = (pix_map & 0b11111000) >> 3;
     uint8_t buffer_shift = (pix_map & 0b00000111);
-    uint8_t buffer_value = 1 << buffer_shift;
+    uint8_t buffer_value = (uint8_t) 1 << buffer_shift;
     if (active) {
         ((uint8_t *) lcd_bitmap)[buffer_index] |= buffer_value;
     } else {

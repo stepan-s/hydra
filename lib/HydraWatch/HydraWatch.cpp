@@ -43,15 +43,15 @@ bool HydraWatch::writePacket(const HydraPacket* packet) {
 bool HydraWatch::isPacketAvailable() {
     uint32_t timestamp = hydra->getTime();
     if (timestamp != this->timestamp) {
-        uint32_t localtime = (timestamp + this->hydra->getTimeZoneOffset()) % 86400;
+        uint32_t localtime = (uint32_t)((timestamp + this->hydra->getTimeZoneOffset()) % 86400);
         uint8_t hour = localtime / 3600;
         uint8_t minute = (localtime % 3600) / 60;
         lcd_render_symbol(0, hour / 10);
         lcd_render_symbol(1, hour % 10);
         lcd_render_symbol(2, minute / 10);
         lcd_render_symbol(3, minute % 10);
-        lcd_render_pixel(LCD_PIXEL_WATCH_DOT_HI, this->hydra->isTimeSynced() ? timestamp & 1 : 0);
-        lcd_render_pixel(LCD_PIXEL_WATCH_DOT_LO, timestamp & 1);
+        lcd_render_pixel(LCD_PIXEL_WATCH_DOT_HI, (this->hydra->isTimeSynced() ? timestamp & 1 : 0) == 1);
+        lcd_render_pixel(LCD_PIXEL_WATCH_DOT_LO, (timestamp & 1) == 1);
     }
     this->timestamp = timestamp;
 

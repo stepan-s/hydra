@@ -143,7 +143,7 @@ HydraAddress HydraNetComponent::getAddress() {
 
 Hydra::Hydra(HydraComponentDescriptionList* components) {
     this->components = components;
-    this->ms = millis();
+    this->ms = (uint32_t) millis();
     this->timestamp = 0;
     this->timezone_offset_seconds = 0;
     this->default_gateway.raw = HYDRA_ADDR_NULL;
@@ -197,9 +197,9 @@ void Hydra::consoleRun() {
                 case 's':
                     {
                         int pos = input.indexOf('=');
-                        String name = input.substring(2, pos);
+                        String name = input.substring(2, (unsigned int) pos);
                         name.trim();
-                        String value = input.substring(pos + 1);
+                        String value = input.substring((unsigned int) pos + 1);
                         value.trim();
                         if (this->consoleSetConfigValue(name, value)) {
                             hydra_fprintln("Set value successful");
@@ -210,8 +210,8 @@ void Hydra::consoleRun() {
                     {
                         int i = 0;
                         while(i < 2048) {
-                            this->consolePrintHex((i >> 8) & 0xff);
-                            this->consolePrintHex(i & 0xff);
+                            this->consolePrintHex((uint8_t)((i >> 8) & 0xff));
+                            this->consolePrintHex((uint8_t)(i & 0xff));
                             hydra_print(' ');
                             this->consolePrintHex((uint8_t *) i, 32);
                             hydra_print('\n');
@@ -270,7 +270,7 @@ String Hydra::consoleGetConfigValueFullName(uint8_t index, uint8_t value_index) 
 }
 
 void Hydra::consolePrintConfig() {
-    int i, j;
+    uint8_t i, j;
     for(i = 0; i < this->components->totalCount; ++i) {
         HydraComponentDescription* item = & this->components->list[i];
         const HydraConfigValueDescriptionList* config_description = item->component->getConfigDescription();
@@ -302,11 +302,11 @@ bool Hydra::consoleParseHex(String hex, uint8_t* buffer, uint8_t length) {
         char c = hex.charAt(i);
         byte b = 0;
         if ((c >= '0') && (c <= '9')) {
-            b = c - '0';
+            b = (byte)(c - '0');
         } else if ((c >= 'A') && (c <= 'F')) {
-            b = c - 'A' + 0x0A;
+            b = (byte)(c - 'A' + 0x0A);
         } else if ((c >= 'a') && (c <= 'f')) {
-            b = c - 'a' + 0x0A;
+            b = (byte)(c - 'a' + 0x0A);
         } else {
             hydra_fprint("Wrong value symbol at ");
             hydra_print(i);
@@ -329,7 +329,7 @@ bool Hydra::consoleParseHex(String hex, uint8_t* buffer, uint8_t length) {
 
 
 bool Hydra::consoleSetConfigValue(String name, String value) {
-    int i, j;
+    uint8_t i, j;
     for(i = 0; i < this->components->totalCount; ++i) {
         HydraComponentDescription* item = & this->components->list[i];
         const HydraConfigValueDescriptionList* config_description = item->component->getConfigDescription();
@@ -412,7 +412,7 @@ void Hydra::init() {
 }
 
 void Hydra::updateTimer() {
-    uint32_t ms = millis();
+    uint32_t ms = (uint32_t) millis();
     uint32_t delta_ms = ms - this->ms;
     this->timestamp += delta_ms / 1000;
     this->ms = ms - delta_ms % 1000;
@@ -603,7 +603,7 @@ uint16_t HydraTimeout::last_ms = 0;
 uint16_t HydraTimeout::delta_ms = 0;
 
 void HydraTimeout::begin(uint16_t ms) {
-    this->last_ms = millis();
+    this->last_ms = (uint32_t) millis();
     this->left_ms = ms;
 }
 
@@ -622,7 +622,7 @@ uint16_t HydraTimeout::left() {
 }
 
 void HydraTimeout::calcDelta() {
-    uint16_t time = millis();
+    uint16_t time = (uint32_t) millis();
     HydraTimeout::delta_ms = time - HydraTimeout::last_ms;
     HydraTimeout::last_ms = time;
 }
