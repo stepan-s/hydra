@@ -254,7 +254,7 @@ public:
     uint32_t getTime();
     bool isTimeSynced();
     int32_t getTimeZoneOffset();
-    void setTime(uint32_t timestamp, int16_t timezone_offset_minutes = 32768);
+    void setTime(uint32_t timestamp, int16_t timezone_offset_minutes = 0);
     HydraAddress getDefaultGateway();
     bool isMasterOnline();
 
