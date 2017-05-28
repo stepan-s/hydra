@@ -26,10 +26,12 @@ class HydraWatchLM16x8: public HydraComponent {
 
     LedControl* led_control;
     byte display_values[4] = {0, 0, 0, 0};
+    byte point_stage = 4;
+    HydraTimeout point_timeout;
     void displayInit();
-    void setDigit(int index, int digit, boolean force = false);
+    void setDigit(byte index, byte digit, boolean force = false);
     void setDisplay(int value, boolean force = false);
-    void setPoint(int stage);
+    void setPoint(byte stage);
 
 public:
     HydraWatchLM16x8(uint8_t dataPin, uint8_t clkPin, uint8_t csPin);

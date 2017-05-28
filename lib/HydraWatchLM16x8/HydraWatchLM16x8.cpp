@@ -132,6 +132,7 @@ void HydraWatchLM16x8::init(Hydra* hydra) {
     HydraComponent::init(hydra);
     this->displayInit();
     this->timestamp = hydra->getTime();
+    this->point_timeout.begin(2000);
     hydra_debug("HydraWatchLM16x8::init end");
 }
 
@@ -153,22 +154,32 @@ bool HydraWatchLM16x8::writePacket(const HydraPacket* packet) {
 bool HydraWatchLM16x8::isPacketAvailable() {
     uint32_t timestamp = hydra->getTime();
     if (timestamp != this->timestamp) {
-        uint32_t localtime = (timestamp + this->hydra->getTimeZoneOffset()) % 86400;
+        uint32_t localtime = (uint32_t)((timestamp + this->hydra->getTimeZoneOffset()) % 86400);
         uint8_t hour = localtime / 3600;
         uint8_t minute = (localtime % 3600) / 60;
         this->setDigit(0, hour / 10);
         this->setDigit(1, hour % 10);
         this->setDigit(2, minute / 10);
         this->setDigit(3, minute % 10);
-        int point_stage;
-        if (this->hydra->isTimeSynced()) {
-            point_stage = (timestamp & 1) ? 4 : 5;
-        } else {
-            point_stage = timestamp & 3;
-        }
+    }
+
+    this->point_timeout.tick();
+    byte point_stage;
+    if (this->hydra->isTimeSynced()) {
+        point_stage = (this->point_timeout.left() > 1000) ? 4 : 5;
+    } else {
+        point_stage = 3 - ((this->point_timeout.left() / 250) & 3);
+    }
+    if ((timestamp != this->timestamp)
+        || (point_stage != this->point_stage)) {
         this->setPoint(point_stage);
     }
+
     this->timestamp = timestamp;
+
+    if (this->point_timeout.isEnd()) {
+        this->point_timeout.begin(2000);
+    }
 
     return false;
 }
@@ -189,17 +200,17 @@ void HydraWatchLM16x8::displayInit() {
     this->setDisplay(0, true);
 }
 
-void HydraWatchLM16x8::setDigit(int index, int digit, boolean force) {
+void HydraWatchLM16x8::setDigit(byte index, byte digit, boolean force) {
     if (force || (this->display_values[index] != digit)) {
         this->display_values[index] = digit;
-        int address = index >> 1;
-        int a = this->display_values[index | B01];
-        int b = this->display_values[index & B10];
-        int a_shift = address ? 5 : 4;
-        int b_shift = address ? 1 : 0;
+        byte address = index >> 1;
+        byte a = this->display_values[index | B01];
+        byte b = this->display_values[index & B10];
+        byte a_shift = address ? 5 : 4;
+        byte b_shift = address ? 1 : 0;
 
-        for (int row = 0; row < 8; row++) {
-            int value = (font[a][row] << a_shift) | (font[b][row] << b_shift);
+        for (byte row = 0; row < 8; row++) {
+            byte value = (font[a][row] << a_shift) | (font[b][row] << b_shift);
             this->led_control->setRow(address, 7 - row, value);
         }
     }
@@ -210,14 +221,14 @@ void HydraWatchLM16x8::setDisplay(int value, boolean force) {
     int b = (value / 10) % 10;
     int c = (value / 100) % 10;
     int d = (value / 1000) % 10;
-    this->setDigit(0, d, force);
-    this->setDigit(1, c, force);
-    this->setDigit(2, b, force);
-    this->setDigit(3, a, force);
+    this->setDigit(0, (byte) d, force);
+    this->setDigit(1, (byte) c, force);
+    this->setDigit(2, (byte) b, force);
+    this->setDigit(3, (byte) a, force);
 }
 
-void HydraWatchLM16x8::setPoint(int stage) {
-    int pixels;
+void HydraWatchLM16x8::setPoint(byte stage) {
+    byte pixels;
     switch (stage) {
         case 0:
             pixels = B1001;
@@ -237,9 +248,13 @@ void HydraWatchLM16x8::setPoint(int stage) {
         case 5:
             pixels = B1111;
             break;
+        default:
+            pixels = B0000;
+            break;
     }
     this->led_control->setLed(0, 3, 0, pixels & B0001);   // left bottom
     this->led_control->setLed(0, 4, 0, pixels & B0010);   // left top
     this->led_control->setLed(1, 4, 7, pixels & B0100);   // right top
     this->led_control->setLed(1, 3, 7, pixels & B1000);   // right bottom
+    this->point_stage = stage;
 }
