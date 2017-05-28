@@ -7,6 +7,9 @@
 
 #define HYDRA_NRF_BC 0xFF
 
+#define HYDRA_NRF_PAYLOAD_TYPE_AUTH_REQUEST 0xA1
+#define HYDRA_NRF_PAYLOAD_TYPE_AUTH_REPLY 0xA2
+
 struct HydraNrfConfig : HydraNetConfig {
     union {
         uint8_t raw[24 + HYDRA_NET_ROUTE_COUNT * 2];
@@ -35,6 +38,10 @@ class HydraNrf: public HydraNetComponent {
     RF24* radio;
     uint8_t enc_iv[16];
     AES* aes;
+    // auth
+    bool auth;
+    HydraTimeout auth_timeout;
+    uint32_t auth_nonce;
 
 public:
     HydraNrf(uint8_t cePin, uint8_t csPin);

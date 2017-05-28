@@ -1,5 +1,4 @@
 #include "HydraNrf.h"
-#include <HydraCore.h>
 
 static const uint8_t _enc_iv[16] = {'H', 'Y', 'D', 'R', 'A', ' ', 'N', 'F', 'R', ' ', 'A', 'E', 'S', ' ', 'I', 'V'};
 
@@ -93,10 +92,41 @@ void HydraNrf::init(Hydra* hydra) {
         hydra_debug("HydraNrf::encryption disabled");
     }
 
+    // Start auth
+    this->auth = false;
+    this->auth_timeout.begin(1000);
+
     hydra_debug("HydraNrf::init end");
 }
 
 bool HydraNrf::isPacketAvailable() {
+    if (!this->auth) {
+        if (this->hydra->isTimeSynced()) {
+            // Time in sync -> no auth required
+            this->auth = true;
+            hydra_fprintln("NRF auth=1 (synced)");
+        } else {
+            this->auth_timeout.tick();
+            if (this->auth_timeout.isEnd()) {
+                // Send auth request
+                HydraPacket packet;
+                memset(&packet, 0, HYDRA_PACKET_SIZE);
+                packet.part.from_addr.raw = this->config.parts.addr.raw;
+                packet.part.from_service = HYDRA_NET_SERVICE_ID;
+                packet.part.to_addr.raw = HYDRA_ADDR_BROADCAST_ALL;
+                packet.part.to_service = HYDRA_NET_SERVICE_ID;
+                packet.part.timestamp = this->hydra->getTime();
+                packet.part.payload.type = HYDRA_NRF_PAYLOAD_TYPE_AUTH_REQUEST;
+                this->auth_nonce = this->hydra->rand();
+                memcpy(&packet.part.payload.data, &this->auth_nonce, 4);
+                this->sendPacket({HYDRA_ADDR_BROADCAST_ALL}, &packet);
+
+                this->auth_timeout.begin(1000);
+                hydra_fprintln("NRF auth requested");
+            }
+        }
+    }
+
     return this->radio->available();
 }
 
@@ -116,16 +146,80 @@ bool HydraNrf::readPacket(HydraPacket* packet) {
         uint32_t now = this->hydra->getTime();
         hydra_debug_param("Packet time ", packet->part.timestamp);
         hydra_debug_param("System time ", now);
-        if (abs((int32_t)now - (int32_t)packet->part.timestamp) <= 2) {
-            //time diff <2sec pass packet
-            return true;
+
+        if (packet->part.to_service == HYDRA_NET_SERVICE_ID) {
+            switch (packet->part.payload.type) {
+                case HYDRA_NRF_PAYLOAD_TYPE_AUTH_REQUEST:
+                    // Auth request
+                    if (this->auth) {
+                        hydra_fprint("NRF auth request from ");
+                        hydra_hprintln(packet->part.from_addr.raw);
+                        // Send auth response
+                        HydraPacket packet_response;
+                        memset(& packet_response, 0, HYDRA_PACKET_SIZE);
+                        packet_response.part.from_addr.raw = this->config.parts.addr.raw;
+                        packet_response.part.from_service = HYDRA_NET_SERVICE_ID;
+                        packet_response.part.to_addr.raw = packet->part.from_addr.raw;
+                        packet_response.part.to_service = HYDRA_NET_SERVICE_ID;
+                        packet_response.part.timestamp = this->hydra->getTime();
+                        packet_response.part.payload.type = HYDRA_NRF_PAYLOAD_TYPE_AUTH_REPLY;
+                        *(uint32_t*)(& packet_response.part.payload.data) = ~*(uint32_t*)(& packet->part.payload.data);
+                        *(uint16_t*)(& packet->part.payload.data[4]) = (uint16_t)(this->hydra->getTimeZoneOffset() / 60);
+                        this->sendPacket({packet_response.part.to_addr.raw}, & packet_response);
+                    } else {
+                        hydra_fprint("DROP PACKET cant auth");
+                    }
+                    break;
+                case HYDRA_NRF_PAYLOAD_TYPE_AUTH_REPLY:
+                    if (!this->auth) {
+                        if (this->auth_nonce != 0) {
+                            // Check auth
+                            if ((packet->part.to_addr.raw == this->config.parts.addr.raw)
+                                && (*(uint32_t *) (&packet->part.payload.data) == ~this->auth_nonce)) {
+                                this->auth = true;
+                                hydra->setTime(packet->part.timestamp, *(uint16_t *) (&packet->part.payload.data[4]));
+                                hydra_fprintln("NRF auth done");
+                            } else {
+                                hydra_fprintln("NRF auth fail");
+                                hydra_debug_param("to ", packet->part.to_addr.raw);
+                                hydra_debug_param("from ", packet->part.from_addr.raw);
+                                hydra_debug_param("nonce received ", *(uint32_t *) (&packet->part.payload.data));
+                                hydra_debug_param("nonce expected ", ~this->auth_nonce);
+                                this->auth_nonce = 0;
+                            }
+                        } else {
+                            hydra_fprintln("DROP PACKET not allowed auth");
+                        }
+                    } else {
+                        hydra_fprintln("DROP PACKET auth already");
+                    }
+                    break;
+                default:
+                    hydra_fprintln("DROP PACKET unknown");
+                    break;
+            }
+            // packet handled
+            return false;
         }
-        if ((packet->part.to_service == HYDRA_CORE_SERVICE_ID) && (packet->part.payload.type == HYDRA_CORE_PAYLOAD_TYPE_SET_TIME) && ((packet->part.timestamp > now) or !this->hydra->isTimeSynced())) {
-            //for heartbeat packet, allow set time > now or if time not sync
-            return true;
+
+        if (this->auth) {
+            if (abs((int32_t) now - (int32_t) packet->part.timestamp) <= 2) {
+                //time diff <=2sec -> pass packet
+                return true;
+            }
+
+            hydra_fprintln("DROP PACKET invalid time/encryption");
+            hydra_debug_param("HydraNrf::readPacket packet expired ", abs(now - packet->part.timestamp));
+
+            if (!this->hydra->isTimeSynced()) {
+                // Time out of sync -> auth require
+                this->auth = false;
+                hydra_fprintln("NRF auth=0 (out of sync)");
+            }
+        } else {
+            // Auth required
+            hydra_fprintln("DROP PACKET nrf auth required");
         }
-        hydra_fprintln("DROP PACKET invalid time/encryption");
-        hydra_debug_param("HydraNrf::readPacket packet expired ", abs(now - packet->part.timestamp));
     } else {
         hydra_fprintln("DROP PACKET invalid size");
     }
