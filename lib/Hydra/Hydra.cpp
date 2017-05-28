@@ -386,7 +386,7 @@ void Hydra::saveConfig() {
     hydra_debug("Hydra::saveConfig end");
 }
 
-void Hydra::init() {
+void Hydra::init(uint8_t random_pin) {
     hydra_debug("Hydra::init begin");
     hydra_fprintln("Hydra v1");
     hydra_fprintln("START");
@@ -407,6 +407,15 @@ void Hydra::init() {
     }
     this->master_online_timeout.begin(0);
     this->time_sync_timeout.begin(0);
+
+    // random seed
+    this->rand_seed = 0;
+    for (byte b = 0; b < 32; ++b) {
+        this->rand_seed |= (analogRead(random_pin) & 1) ? 1 : 0;
+        this->rand_seed <<= 1;
+    }
+    hydra_debug_param("random seed ", this->rand_seed);
+
     hydra_fprintln("READY");
     hydra_debug("Hydra::init end");
 }
@@ -597,6 +606,12 @@ HydraAddress Hydra::getDefaultGateway() {
 
 bool Hydra::isMasterOnline() {
     return !this->master_online_timeout.isEnd();
+}
+
+uint32_t Hydra::rand() {
+    //srandom(this->rand_seed ^ millis());
+    //this->rand_seed = (uint32_t) random();
+    return ~this->rand_seed;
 }
 
 uint16_t HydraTimeout::last_ms = 0;

@@ -232,6 +232,7 @@ class Hydra {
     HydraTimeout time_sync_timeout;
     HydraTimeout master_online_timeout;
     HydraAddress default_gateway;
+    uint32_t rand_seed;
     void consoleRun();
     void consoleHelp();
     void consolePrintConfig();
@@ -247,7 +248,7 @@ class Hydra {
 public:
     Hydra(HydraComponentDescriptionList* components);
     void bootConsole();
-    void init();
+    void init(uint8_t random_pin = 0);
     void loop();
     void route(const HydraPacket* packet, const HydraAddress received_via);
     void landing(const HydraPacket* packet, const HydraAddress received_via, const HydraAddress landing_via);
@@ -257,6 +258,7 @@ public:
     void setTime(uint32_t timestamp, int16_t timezone_offset_minutes = 0);
     HydraAddress getDefaultGateway();
     bool isMasterOnline();
+    uint32_t rand();
 
     friend class HydraConfig;
     friend class HydraCore;
