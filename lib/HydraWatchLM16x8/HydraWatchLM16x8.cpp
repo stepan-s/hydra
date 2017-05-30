@@ -1,4 +1,5 @@
 #include "HydraWatchLM16x8.h"
+#include <HydraBright.h>
 
 const byte font[10][8] = {
     {
@@ -110,8 +111,9 @@ HydraWatchLM16x8::HydraWatchLM16x8(uint8_t dataPin, uint8_t clkPin, uint8_t csPi
 const char* HydraWatchLM16x8::name = "Watch";
 
 const HydraConfigValueDescriptionList HydraWatchLM16x8::config_value_description_list = {
-    1, 3, (HydraConfigValueDescription[]) {
+    2, 6, (HydraConfigValueDescription[]) {
         {HYDRA_CONFIG_VALUE_TYPE_ADDR_SERVICE, 3, "MasterServ"},
+        {HYDRA_CONFIG_VALUE_TYPE_ADDR_SERVICE, 3, "BrightServ"},
     }
 };
 
@@ -133,20 +135,25 @@ void HydraWatchLM16x8::init(Hydra* hydra) {
     this->displayInit();
     this->timestamp = hydra->getTime();
     this->point_timeout.begin(2000);
+    this->bright_timeout.begin(1000);
     hydra_debug("HydraWatchLM16x8::init end");
 }
 
 bool HydraWatchLM16x8::writePacket(const HydraPacket* packet) {
     hydra_debug("HydraWatchLM16x8::writePacket");
     switch (packet->part.payload.type) {
-    case HYDRA_WATCH_LM16x8_PAYLOAD_TYPE_DISPLAY:
-        break;
-    case HYDRA_WATCH_LM16x8_PAYLOAD_TYPE_BRIGHT:
-        int devices = this->led_control->getDeviceCount();
-        for (int address = 0; address < devices; address++) {
-            this->led_control->setIntensity(address, packet->part.payload.data[0]);
-        }
-        break;
+        case HYDRA_WATCH_LM16x8_PAYLOAD_TYPE_DISPLAY:
+            break;
+        case HYDRA_BRIGHT_PAYLOAD_TYPE_REPLY:
+        case HYDRA_WATCH_LM16x8_PAYLOAD_TYPE_BRIGHT:
+            uint8_t bright =  packet->part.payload.data[0] >> 4;
+            hydra_fprint("set brightness ");
+            hydra_println(bright);
+            int devices = this->led_control->getDeviceCount();
+            for (int address = 0; address < devices; address++) {
+                this->led_control->setIntensity(address, bright);
+            }
+            break;
     }
     return true;
 }
@@ -181,10 +188,22 @@ bool HydraWatchLM16x8::isPacketAvailable() {
         this->point_timeout.begin(2000);
     }
 
+    this->bright_timeout.tick();
+    if (this->bright_timeout.isEnd()) {
+        return true;
+    }
+
     return false;
 }
 
 bool HydraWatchLM16x8::readPacket(HydraPacket* packet) {
+    if (this->bright_timeout.isEnd()) {
+        packet->part.to_addr = this->config.parts.bright_service.addr;
+        packet->part.to_service = this->config.parts.bright_service.service;
+        packet->part.payload.type = HYDRA_BRIGHT_PAYLOAD_TYPE_REQUEST;
+        this->bright_timeout.begin(1000);
+        return true;
+    }
     return false;
 }
 

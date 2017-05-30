@@ -10,10 +10,10 @@
 
 struct HydraWatchLM16x8Config {
     union {
-        uint8_t raw[2];
+        uint8_t raw[6];
         struct {
-            HydraAddress addr;
-            uint8_t service;
+            HydraAddressPort master_service;
+            HydraAddressPort bright_service;
         } parts;
     };
 };
@@ -28,6 +28,7 @@ class HydraWatchLM16x8: public HydraComponent {
     byte display_values[4] = {0, 0, 0, 0};
     byte point_stage = 4;
     HydraTimeout point_timeout;
+    HydraTimeout bright_timeout;
     void displayInit();
     void setDigit(byte index, byte digit, boolean force = false);
     void setDisplay(int value, boolean force = false);
