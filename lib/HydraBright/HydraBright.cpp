@@ -43,9 +43,19 @@ bool HydraBright::isPacketAvailable() {
 bool HydraBright::readPacket(HydraPacket* packet) {
     if (this->reply_ready) {
         int value = analogRead(this->pin);
-        uint8_t diapasone = this->config.parts.gain_max - this->config.parts.gain_min;
-        uint8_t val = ((value << 6) / diapasone) - ((this->config.parts.gain_min << 8) / diapasone);
-        packet->part.payload.data[0] = val;
+        int value_gain_min = this->config.parts.gain_min << 2;
+        int value_gain_max = this->config.parts.gain_max << 2;
+        value = max(value, value_gain_min);
+        value = min(value, value_gain_max);
+        value -= value_gain_min;
+        int interval = value_gain_max - value_gain_min;
+        if (interval > 0) {
+            float multiplier = (float) 256 / (float) interval;
+            value *= multiplier;
+        } else {
+            value = 0;
+        }
+        packet->part.payload.data[0] = (byte)value;
 
         packet->part.to_addr = this->reply_to.addr;
         packet->part.to_service = this->reply_to.service;
