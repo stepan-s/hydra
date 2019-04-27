@@ -52,10 +52,12 @@ bool HydraCore::writePacket(const HydraPacket* packet) {
         break;
     case HYDRA_CORE_PAYLOAD_TYPE_ENUM_REQUEST:
         if ((packet->part.to_addr.part.device & packet->part.payload.data[1]) == packet->part.payload.data[0]) {
+            hydra_fprint("ENUM REQ: ");
+            hydra_hprintln(packet->part.from_addr.raw);
             this->reply_to.addr = packet->part.from_addr;
             this->reply_to.service = packet->part.from_service;
             //delay depend device number
-            this->reply_timeout.begin(packet->part.to_addr.part.device * HYDRA_CORE_ENUM_DELAY_MS);
+            this->reply_timeout.begin(packet->part.to_addr.part.device * (uint16_t)HYDRA_CORE_ENUM_DELAY_MS);
         }
         break;
     default:
@@ -109,7 +111,7 @@ bool HydraCore::readPacket(HydraPacket* packet) {
 
         ((uint32_t *)packet->part.payload.data)[0] = (uint32_t) hard.get();
         ((uint32_t *)packet->part.payload.data)[1] = (uint32_t) soft.get();
-
+        hydra_fprintln("ENUM RESP");
         return true;
     } else {
         return false;

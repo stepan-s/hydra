@@ -1,4 +1,5 @@
 #include "Hydra.h"
+#include "HydraEcho.h"
 #include <EEPROM.h>
 
 // HydraComponent
@@ -528,21 +529,28 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
 
     HydraAddress destination = packet->part.to_addr;
     bool need_set_from_addr = (hydra_is_addr_local(received_via) && (hydra_is_addr_local(packet->part.from_addr) || hydra_is_addr_null(packet->part.from_addr)));
+    HydraAddress routed_via = (HydraAddress){HYDRA_ADDR_NULL};
 
     if (hydra_is_addr_null(destination)) {
         //drop
     } else if (hydra_is_addr_local(destination)) {
         this->landing(packet, received_via, (HydraAddress){HYDRA_ADDR_LOCAL});
+        routed_via = (HydraAddress){HYDRA_ADDR_LOCAL};
+
     } else if (hydra_is_addr_to_all(destination)) {
         //send to all nets (exclude source)
         for(i = 0; i < this->components->netifCount; ++i) {
             HydraNetComponent* item = this->components->list[i].netif.component;
             if (received_via.raw != item->getAddress().raw) {
                 this->netSend(item, destination, packet, need_set_from_addr);
+                routed_via = destination;
             }
         }
         //and to me
         this->landing(packet, received_via, received_via);
+        if (hydra_is_addr_null(routed_via)) {
+            routed_via = (HydraAddress){HYDRA_ADDR_LOCAL};
+        }
 
     } else if (hydra_is_addr_to_net(destination)) {
         //send to exactly to net (exclude source)
@@ -554,10 +562,12 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
                 if (received_via.raw != if_addr.raw) {
                     //send other devices or net
                     this->netSend(item, gateway, packet, need_set_from_addr);
+                    routed_via = gateway;
                 }
                 if (hydra_is_addr_to_net(gateway) && (if_addr.part.net == destination.part.net)) {
                     //and to me
                     this->landing(packet, received_via, if_addr);
+                    routed_via = (HydraAddress){HYDRA_ADDR_LOCAL};
                 }
                 break;
             }
@@ -572,11 +582,13 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
             if (received_via.raw != if_addr.raw) {
                 //to other net
                 this->netSend(item, destination, packet, need_set_from_addr);
+                routed_via = destination;
             }
             if (!landed && (destination.part.device == if_addr.part.device)) {
                 //and me
                 landed = true;
                 this->landing(packet, received_via, if_addr);
+                routed_via = (HydraAddress){HYDRA_ADDR_LOCAL};
             }
         }
 
@@ -587,17 +599,45 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
             HydraAddress if_addr = item->getAddress();
             if (gateway.raw == HYDRA_ADDR_LOCAL) {
                 this->landing(packet, received_via, if_addr);
+                routed_via = (HydraAddress){HYDRA_ADDR_LOCAL};
                 break;
             } else if (gateway.raw != HYDRA_ADDR_NULL) {
                 if (received_via.raw != if_addr.raw) {
                     this->netSend(item, gateway, packet, need_set_from_addr);
+                    routed_via = gateway;
                     break;
                 }
             }
         }
 
     }
+
+    if (packet->part.to_service == HYDRA_ECHO_SERVICE_ID) {
+        this->pingDebug(packet, received_via, routed_via);
+    }
+
     hydra_debug("Hydra::route end");
+}
+
+void Hydra::pingDebug(const HydraPacket* packet, const HydraAddress received_via, const HydraAddress routed_via) {
+    if (packet->part.payload.type == HYDRA_ECHO_PAYLOAD_TYPE_REQUEST) {
+        hydra_fprint("PING ");
+    } else if (packet->part.payload.type == HYDRA_ECHO_PAYLOAD_TYPE_REPLY) {
+        hydra_fprint("PONG ");
+    } else {
+        hydra_fprint("P?NG ");
+    }
+    hydra_hprint(packet->part.from_addr.raw);
+    hydra_fprint(" via ");
+    hydra_hprint(received_via.raw);
+    hydra_fprint(" -> ");
+    hydra_hprint(packet->part.to_addr.raw);
+    hydra_fprint(" via ");
+    if (hydra_is_addr_null(routed_via)) {
+        hydra_fprintln("NO ROUTE");
+    } else {
+        hydra_hprintln(routed_via.raw);
+    }
 }
 
 void Hydra::landing(const HydraPacket* packet, const HydraAddress received_via, const HydraAddress landing_via) {

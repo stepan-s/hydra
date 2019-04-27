@@ -261,6 +261,7 @@ public:
     void init(uint8_t random_pin = 0);
     void loop();
     void route(const HydraPacket* packet, const HydraAddress received_via);
+    void pingDebug(const HydraPacket* packet, const HydraAddress received_via, const HydraAddress routed_via);
     void landing(const HydraPacket* packet, const HydraAddress received_via, const HydraAddress landing_via);
     uint32_t getTime();
     bool isTimeSynced();
