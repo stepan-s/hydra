@@ -42,6 +42,8 @@
     #define HYDRA_BOOT_CONSOLE_WAIT_TIME 3
 #endif
 
+#define HYDRA_PIN_NONE 255
+
 #define hydra_debug_(msg)                    Serial.println(F(msg))
 #define hydra_debug_param_(msg, param)        Serial.print(F(msg)); Serial.println(param)
 #ifdef HYDRA_DEBUG
@@ -245,6 +247,14 @@ class Hydra {
     void saveConfig();
     void updateTimer();
 
+    void netSend(HydraNetComponent* item, const HydraAddress destination, const HydraPacket* packet, const bool need_set_from_addr);
+    uint8_t led_receive_pin;
+    uint8_t led_send_pin;
+    HydraTimeout led_receive_timeout;
+    HydraTimeout led_send_timeout;
+    void onNetReceivePacket();
+    void onNetSendPacket();
+
 public:
     Hydra(HydraComponentDescriptionList* components);
     void bootConsole();
@@ -259,6 +269,8 @@ public:
     HydraAddress getDefaultGateway();
     bool isMasterOnline();
     uint32_t rand();
+    void setPinLedReceive(const uint8_t pin);
+    void setPinLedSend(const uint8_t pin);
 
     friend class HydraConfig;
     friend class HydraCore;

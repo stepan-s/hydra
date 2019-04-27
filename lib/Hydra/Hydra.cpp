@@ -147,12 +147,15 @@ Hydra::Hydra(HydraComponentDescriptionList* components) {
     this->timestamp = 0;
     this->timezone_offset_seconds = 0;
     this->default_gateway.raw = HYDRA_ADDR_NULL;
+    this->led_receive_pin = HYDRA_PIN_NONE;
+    this->led_send_pin = HYDRA_PIN_NONE;
 }
 
 void Hydra::bootConsole() {
     hydra_fprintln("Send any to enter Hydra configuration console.");
     byte countdown = HYDRA_BOOT_CONSOLE_WAIT_TIME * 10;
-    pinMode(13, OUTPUT);
+    uint8_t led_pin = this->led_receive_pin == HYDRA_PIN_NONE ? 13 : this->led_receive_pin;
+    pinMode(led_pin, OUTPUT);
     while (countdown--) {
         delay(100);
         if (Serial.available() > 0) {
@@ -160,20 +163,22 @@ void Hydra::bootConsole() {
                 Serial.read();
             }
             hydra_print('\n');
+            digitalWrite(led_pin, LOW);
             this->consoleRun();
-            digitalWrite(13, LOW);
             return;
         }
         hydra_print('.');
-        digitalWrite(13, countdown & 1 ? HIGH : LOW);
+        digitalWrite(led_pin, countdown & 1 ? HIGH : LOW);
     }
     hydra_print('\n');
-    digitalWrite(13, LOW);
+    digitalWrite(led_pin, LOW);
 }
 
 void Hydra::consoleRun() {
     hydra_fprintln("Welcome to Hydra configuration console!");
     this->consoleHelp();
+    uint8_t led_pin = this->led_send_pin == HYDRA_PIN_NONE ? 13 : this->led_send_pin;
+    pinMode(led_pin, OUTPUT);
     while(true) {
         if (Serial.available()) {
             String input = Serial.readString();
@@ -223,8 +228,9 @@ void Hydra::consoleRun() {
                     hydra_fprintln("Unknown command");
             }
         }
-        digitalWrite(13, millis() & 0x400 ? HIGH : LOW);
+        digitalWrite(led_pin, millis() & 0x400 ? HIGH : LOW);
     }
+    digitalWrite(led_pin, LOW);
 }
 
 void Hydra::consoleHelp() {
@@ -427,6 +433,30 @@ void Hydra::updateTimer() {
     this->ms = ms - delta_ms % 1000;
 }
 
+void Hydra::setPinLedReceive(const uint8_t pin) {
+    this->led_receive_pin = pin;
+    pinMode(pin, OUTPUT);
+}
+
+void Hydra::setPinLedSend(const uint8_t pin) {
+    this->led_send_pin = pin;
+    pinMode(pin, OUTPUT);
+}
+
+void Hydra::onNetReceivePacket() {
+    if (this->led_receive_pin != HYDRA_PIN_NONE) {
+        digitalWrite(this->led_receive_pin, HIGH);
+        this->led_receive_timeout.begin(250);
+    }
+}
+
+void Hydra::onNetSendPacket() {
+    if (this->led_send_pin != HYDRA_PIN_NONE) {
+        digitalWrite(this->led_send_pin, HIGH);
+        this->led_send_timeout.begin(250);
+    }
+}
+
 void Hydra::loop() {
     int i;
     HydraPacket packet;
@@ -445,6 +475,7 @@ void Hydra::loop() {
             if (item->readPacket(& packet)) {
                 HydraAddress received_via;
                 if (i < this->components->netifCount) {
+                    this->onNetReceivePacket();
                     received_via.raw = ((HydraNetComponent*) item)->getAddress().raw;
                 } else {
                     received_via.raw = HYDRA_ADDR_LOCAL;
@@ -455,6 +486,29 @@ void Hydra::loop() {
                 this->route(& packet, received_via);
             }
         }
+    }
+
+    if (this->led_receive_pin != HYDRA_PIN_NONE) {
+        this->led_receive_timeout.tick();
+        if (this->led_receive_timeout.isEnd()) {
+             digitalWrite(this->led_receive_pin, LOW);
+        }
+    }
+
+    if (this->led_send_pin != HYDRA_PIN_NONE) {
+        this->led_send_timeout.tick();
+        if (this->led_send_timeout.isEnd()) {
+             digitalWrite(this->led_send_pin, LOW);
+        }
+    }
+}
+
+void Hydra::netSend(HydraNetComponent* item, const HydraAddress destination, const HydraPacket* packet, const bool need_set_from_addr) {
+    this->onNetSendPacket();
+    if (need_set_from_addr) {
+         item->sendPacketFrom(destination, packet);
+    } else {
+         item->sendPacket(destination, packet);
     }
 }
 
@@ -484,11 +538,7 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
         for(i = 0; i < this->components->netifCount; ++i) {
             HydraNetComponent* item = this->components->list[i].netif.component;
             if (received_via.raw != item->getAddress().raw) {
-                if (need_set_from_addr) {
-                    item->sendPacketFrom(destination, packet);
-                } else {
-                    item->sendPacket(destination, packet);
-                }
+                this->netSend(item, destination, packet, need_set_from_addr);
             }
         }
         //and to me
@@ -503,11 +553,7 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
                 HydraAddress if_addr = item->getAddress();
                 if (received_via.raw != if_addr.raw) {
                     //send other devices or net
-                    if (need_set_from_addr) {
-                        item->sendPacketFrom(gateway, packet);
-                    } else {
-                        item->sendPacket(gateway, packet);
-                    }
+                    this->netSend(item, gateway, packet, need_set_from_addr);
                 }
                 if (hydra_is_addr_to_net(gateway) && (if_addr.part.net == destination.part.net)) {
                     //and to me
@@ -525,11 +571,7 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
             HydraAddress if_addr = item->getAddress();
             if (received_via.raw != if_addr.raw) {
                 //to other net
-                if (need_set_from_addr) {
-                    item->sendPacketFrom(destination, packet);
-                } else {
-                    item->sendPacket(destination, packet);
-                }
+                this->netSend(item, destination, packet, need_set_from_addr);
             }
             if (!landed && (destination.part.device == if_addr.part.device)) {
                 //and me
@@ -548,11 +590,7 @@ void Hydra::route(const HydraPacket* packet, const HydraAddress received_via) {
                 break;
             } else if (gateway.raw != HYDRA_ADDR_NULL) {
                 if (received_via.raw != if_addr.raw) {
-                    if (need_set_from_addr) {
-                        item->sendPacketFrom(gateway, packet);
-                    } else {
-                        item->sendPacket(gateway, packet);
-                    }
+                    this->netSend(item, gateway, packet, need_set_from_addr);
                     break;
                 }
             }
